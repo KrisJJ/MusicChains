@@ -21,7 +21,7 @@ class Lex_analyzer:
                 2: {a: 8 for a in range(1,25)},
                         
                 3: {1: 8, 2: 8, 3: 8, 4: 3, 5: 1, 6: 8, 7: 1, 8: 1,
-                    9: 1, 10: 1, 11: [1, 4], 12: 8, 13: 1, 14: 8, 15: 1, 16: 8,
+                    9: 1, 10: 1, 11: [10, 4], 12: 8, 13: 1, 14: 8, 15: 1, 16: 8,
                     17: 1, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8},
                         
                 4: {1: 8, 2: 8, 3: 4, 4: 4, 5: 1, 6: 8, 7: 1, 8: 1,
@@ -97,19 +97,19 @@ class Lex_analyzer:
                      19: {a: 1 for a in range(1,25)},
                               
                      20: {1: 8, 2: 8, 3: 8, 4: 8, 5: 1, 6: 8, 7: 1, 8: 8,
-                          9: 8, 10: 1, 11: 8, 12: 8, 13: 1, 14: 1, 15: 8, 16: 8,
+                          9: 8, 10: 1, 11: 8, 12: 8, 13: 1, 14: 1, 15: 1, 16: 8,
                           17: 8, 18: 1, 19: 8, 20: 1, 21: 1, 22: 1, 23: 8, 24: 1},
                               
                      21: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 8, 8: 8,
                           9: 8, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 8, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 10, 23: 1, 24: 1},
+                          17: 8, 18: 1, 19: 8, 20: 1, 21: 10, 22: 10, 23: 1, 24: 1},
                               
                      22: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 8, 8: 1,
                           9: 8, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 8, 16: 8,
                           17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 8, 23: 1, 24: 1},
 
                      24: {1: 8, 2: 8, 3: 8, 4: 8, 5: 1, 6: 8, 7: 1, 8: 8,
-                          9: 8, 10: 1, 11: 8, 12: 8, 13: 1, 14: 1, 15: 8, 16: 8,
+                          9: 8, 10: 1, 11: 8, 12: 8, 13: 1, 14: 1, 15: 1, 16: 8,
                           17: 8, 18: 1, 19: 8, 20: 1, 21: 1, 22: 1, 23: 8, 24: 1}}
 
     income = {'letter': 1,
@@ -209,6 +209,7 @@ class Lex_analyzer:
             if state.get_name()=='error':
                 prev_state = state.get_id()
                 state.set(2)
+                print('Error: wrong symbol sequence',buf.get())
 
             else:
                 if not mas_flag:
@@ -216,6 +217,10 @@ class Lex_analyzer:
                 
                 if state.get_name()=='delimit':
                     next_state = self.delim_transit[self.income[prev_inc]][self.income[inc]]
+                    if State.options[next_state]=='delimit':
+                        if buf.get()+current not in self.delim_ds:
+                            next_state = 8
+                            print('Error: unknown delimit group')
                 else:
                     next_state = self.transit[state.get_id()][self.income[inc]]
 
@@ -224,7 +229,7 @@ class Lex_analyzer:
                     mas_flag = True
                     #print(buf.get())
                     if state.get_name()=='num_int':
-                        buf.add(current)
+                        prev_cur = current
                         current = self.f.read(1)
                         prev_prev_inc = prev_inc
                         prev_inc = inc
@@ -232,15 +237,21 @@ class Lex_analyzer:
                         #print(prev_prev_inc, prev_inc, inc)
                         
                         if current.isdigit():
+                            buf.add(prev_cur)
                             next_state = next_state[1]
                             prev_state = state.get_id()
                             state.set(next_state)
-                            print(current, buf.get(), state.get_name())
+                            #print(current, buf.get(), state.get_name())
                         else:
+                            self.lex_array.append(Lexem(k, state.get_name(), buf.get()))
+                            k+=1
+                            buf.clear()
+
+                            buf.add(prev_cur)
                             prev_state = state.get_id()
                             next_state = next_state[0]
                             state.set(next_state)
-                            print(current, buf.get(), state.get_name())
+                            #print(current, buf.get(), state.get_name())
                             
                     elif state.get_name()=='name':
                         if buf.get() in self.keys:
@@ -324,7 +335,7 @@ class Lex_analyzer:
                             state.set(next_state)
 
                     else:
-                        print('Error: found massive does not exist')
+                        print('Error: unable to choose the next state')
                                                 
 
                 else:
@@ -362,9 +373,9 @@ class Lex_analyzer:
                 #if k>100:
                 #    state.set(2)
 
-            print(state.get_name(),State.options[prev_state],inc, buf.get())
+            #print(state.get_name(),State.options[prev_state],inc, buf.get())
 
-        print('bugs: .. 2.3e')
+        print('bugs: 2.3e')
         
         self.lex_array.append(Lexem(k, State.options[prev_state], buf.get()))
         k+=1
