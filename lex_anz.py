@@ -1,6 +1,7 @@
 from lexem import Lexem
 from buffer import Buffer
 from state import State
+import pickle
 
 class Lex_analyzer:
     keys = ['and', 'array', 'begin', 'case', 'const', 'div', 'do', 'downto', 'else', 'end',
@@ -12,105 +13,105 @@ class Lex_analyzer:
 
     delim_ds = ['+=', '-=', '*=', '/=', ':=', '<>', '<=', '>=', '..']
 
-    separs = [' ', '\n', '\t', '\0', '\r', '']
+    separs = [' ', '\n', '\t', '\0', '\r']
 
     transit = {1: {1: 7, 2: 7, 3: 7, 4: 3, 5: 1, 6: 5, 7: 10, 8: [3, 10],
                    9: 10, 10: 10, 11: 10, 12: 10, 13: 10, 14: 10, 15: 10, 16: 10,
-                   17: 10, 18: 9, 19: 9, 20: 60, 21: 10, 22: 10, 23: 7, 24: 61},
+                   17: 10, 18: 9, 19: 9, 20: 60, 21: 10, 22: 10, 23: 7, 24: 61, 25: 1},
                         
-                2: {a: 8 for a in range(1,25)},
+                2: {a: 8 for a in range(1,26)},
                         
-                3: {1: 8, 2: 8, 3: 8, 4: 3, 5: 1, 6: 8, 7: 1, 8: 1,
+                3: {1: 8, 2: 8, 3: 4, 4: 3, 5: 1, 6: 8, 7: 1, 8: 1,
                     9: 1, 10: 1, 11: [10, 4], 12: 8, 13: 1, 14: 8, 15: 1, 16: 8,
-                    17: 1, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8},
+                    17: 1, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8, 25: 1},
                         
-                4: {1: 8, 2: 8, 3: 4, 4: 4, 5: 1, 6: 8, 7: 1, 8: 1,
+                4: {1: 8, 2: 8, 3: [4, 8], 4: 4, 5: 1, 6: 8, 7: 1, 8: [1, 4, 8],
                     9: 1, 10: 1, 11: 8, 12: 8, 13: 1, 14: 8, 15: 1, 16: 8,
-                    17: 8, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8},
+                    17: 8, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8, 25: 1},
                         
                 5: {1: 8, 2: 5, 3: 8, 4: 5, 5: 1, 6: 8, 7: 1, 8: 1,
                     9: 1, 10: 1, 11: 8, 12: 8, 13: 1, 14: 8, 15: 1, 16: 8,
-                    17: 8, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8},
+                    17: 8, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8, 25: 1},
                         
-                60: {a: 60 if a!=20 else 10 for a in range(1,25)},
+                60: {a: 60 if a!=20 else 10 for a in range(1,26)},
 
-                61: {a: 61 if a!=24 else 10 for a in range(1,25)},
+                61: {a: 61 if a!=24 else 10 for a in range(1,26)},
                         
                 7: {1: 7, 2: 7, 3: 7, 4: 7, 5: 1, 6: 8, 7: 1, 8: 1,
-                    9: 1, 10: 1, 11: [2, 8, 10], 12: 1, 13: 1, 14: 1, 15: 1, 16: 1,
-                    17: 1, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 7, 24: 8},
+                    9: 1, 10: 1, 11: [2, 8, 1], 12: 1, 13: 1, 14: 1, 15: 1, 16: 1,
+                    17: 1, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 7, 24: 8, 25: 1},
                         
-                8: {a: 2 for a in range(1,25)},
+                8: {a: 2 for a in range(1,26)},
                         
-                9: {a: 9 if a!=19 else 10 for a in range(1,25)},
+                9: {a: 9 if a!=19 else 10 for a in range(1,26)},
                         
-                10: {a: 10 for a in range(1,25)}}
+                10: {a: 10 for a in range(1,26)}}
 
-    delim_transit = {6: {a: 8 if a!=2 and a!=4 else 5 for a in range(1,25)},
+    delim_transit = {6: {a: 8 if a!=2 and a!=4 else 5 for a in range(1,26)},
                               
                      7: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 8, 8: 8,
                          9: 8, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 8, 16: 8,
-                         17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 10, 23: 1, 24: 1},
+                         17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 10, 23: 1, 24: 1, 25: 1},
                               
                      8: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 8, 8: 8,
                          9: 8, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 8, 16: 8,
-                         17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 10, 23: 1, 24: 8},
+                         17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 10, 23: 1, 24: 8, 25: 1},
                               
                      9: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 8, 8: 8,
                          9: 9, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 8, 16: 8,
-                         17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 10, 23: 1, 24: 8},
+                         17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 10, 23: 1, 24: 8, 25: 1},
                               
                      10: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 8, 8: [3, 10],
                           9: 7, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 8, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 8, 23: 1, 24: 1},
+                          17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 8, 23: 1, 24: 1, 25: 1},
                               
                      11: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 8, 7: 8, 8: 8,
                           9: 8, 10: 8, 11: 10, 12: 8, 13: 8, 14: 8, 15: 8, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 8, 23: 1, 24: 8},
+                          17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 8, 23: 1, 24: 8, 25: 1},
                               
                      12: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 8, 7: 8, 8: 8,
                           9: 8, 10: 8, 11: 8, 12: 8, 13: 8, 14: 8, 15: 8, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 10, 23: 1, 24: 8},
+                          17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 10, 23: 1, 24: 8, 25: 1},
                               
                      13: {1: 1, 2: 1, 3: 1, 4: 8, 5: 1, 6: 8, 7: 8, 8: 8,
                           9: 1, 10: 8, 11: 8, 12: 8, 13: 8, 14: 8, 15: 8, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 8, 23: 1, 24: 8},
+                          17: 8, 18: 1, 19: 8, 20: 8, 21: 8, 22: 8, 23: 1, 24: 8, 25: 1},
                               
                      14: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 8, 8: 1,
                           9: 8, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 1, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 8, 23: 1, 24: 1},
+                          17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 8, 23: 1, 24: 1, 25: 1},
 
                      15: {1: 8, 2: 8, 3: 8, 4: 8, 5: 1, 6: 8, 7: 1, 8: 1,
                           9: 1, 10: 1, 11: 1, 12: 8, 13: 1, 14: 1, 15: 1, 16: 8,
-                          17: 1, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8},
+                          17: 1, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8, 25: 1},
                               
                      16: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 8, 7: 8, 8: 1,
                           9: 8, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 8, 16: 1,
-                          17: 1, 18: 1, 19: 8, 20: 1, 21: 8, 22: 8, 23: 1, 24: 1},
+                          17: 1, 18: 1, 19: 8, 20: 1, 21: 8, 22: 8, 23: 1, 24: 1, 25: 1},
 
                      17: {1: 8, 2: 8, 3: 8, 4: 8, 5: 1, 6: 8, 7: 1, 8: 1,
                           9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 8, 15: 1, 16: 1,
-                          17: 1, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8},
+                          17: 1, 18: 1, 19: 8, 20: 8, 21: 1, 22: 1, 23: 8, 24: 8, 25: 1},
                               
-                     18: {a: 9 if a!=19 else 1 for a in range(1,25)},
+                     18: {a: 9 if a!=19 else 1 for a in range(1,26)},
 
-                     19: {a: 1 for a in range(1,25)},
+                     19: {a: 1 for a in range(1,26)},
                               
                      20: {1: 8, 2: 8, 3: 8, 4: 8, 5: 1, 6: 8, 7: 1, 8: 8,
                           9: 8, 10: 1, 11: 8, 12: 8, 13: 1, 14: 1, 15: 1, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 1, 21: 1, 22: 1, 23: 8, 24: 1},
+                          17: 8, 18: 1, 19: 8, 20: 1, 21: 1, 22: 1, 23: 8, 24: 1, 25: 1},
                               
                      21: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 8, 8: 8,
                           9: 8, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 8, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 1, 21: 10, 22: 10, 23: 1, 24: 1},
+                          17: 8, 18: 1, 19: 8, 20: 1, 21: 10, 22: 10, 23: 1, 24: 1, 25: 1},
                               
                      22: {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 8, 8: 1,
                           9: 8, 10: 8, 11: 8, 12: 8, 13: 8, 14: 1, 15: 8, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 8, 23: 1, 24: 1},
+                          17: 8, 18: 1, 19: 8, 20: 1, 21: 8, 22: 8, 23: 1, 24: 1, 25: 1},
 
                      24: {1: 8, 2: 8, 3: 8, 4: 8, 5: 1, 6: 8, 7: 1, 8: 8,
                           9: 8, 10: 1, 11: 8, 12: 8, 13: 1, 14: 1, 15: 1, 16: 8,
-                          17: 8, 18: 1, 19: 8, 20: 1, 21: 1, 22: 1, 23: 8, 24: 1}}
+                          17: 8, 18: 1, 19: 8, 20: 1, 21: 1, 22: 1, 23: 8, 24: 1, 25: 1}}
 
     income = {'letter': 1,
               'letters_AF': 2,
@@ -135,14 +136,22 @@ class Lex_analyzer:
               '<>': 21,
               '=': 22,
               '_': 23,
-              'dash1': 24}
+              'dash1': 24,
+              'none': 25}
 
-    def __init__(self,file):
-        self.f = open(file, 'r')
+    def __init__(self):
+        self.buf = Buffer()
+        self.state = State()
+        self.prev_state = 0
+        self.next_state = 0
+        self.current = ''
+        self.inc = ''
+        self.prev_inc = ''
+        self.k = 0
+        self.file_end = False
 
-        self.lex_array = []
-
-        self.analyze()
+    def is_finalised(self):
+        return self.file_end
 
     def cur_to_inc(self,current):
         if current=='e':
@@ -193,200 +202,255 @@ class Lex_analyzer:
             return '_'
         elif current=='$':
             return '$'
+        elif current=='':
+            return 'none'
 
-    def analyze(self):
-        buf = Buffer()
-        state = State()
-        current = self.f.read(1)
-        inc = ''
-        prev_inc = ''
+    def analyze(self,fin,fout):
+        lex = []
+        lex_found = False
         mas_flag = False
-        k = 1
-        '''Нужно переместить, чтобы учесть создание нового анализатора при открытии скобок'''
-        
-        while state.get_name()!='final':
+        err_mess = False
 
-            if state.get_name()=='error':
-                prev_state = state.get_id()
-                state.set(2)
-                print('Error: wrong symbol sequence',buf.get())
+        if self.k==0:
+            self.current = fin.read(1)
+
+        while not lex_found:            
+            if self.state.get_name()=='error':
+                if not err_mess and not self.buf.isempty():
+                    print('Error: unexpected symbol sequence',self.buf.get())
+                    lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                    self.k+=1
+                    err_mess = True
+                    self.buf.clear()
+                    lex_found = True
+                self.prev_state = self.state.get_id()
+                self.state.set(1)
+
+            elif self.state.get_name()=='final':
+                lex.append(Lexem(self.k, self.state.get_name(), self.current))
+                self.k+=1
+                self.buf.clear()
+                lex_found = True
+                self.prev_state = self.state.get_id()
+                self.state.set(1)
+                self.current = fin.read(1)
+                self.inc = self.cur_to_inc(self.current)
 
             else:
                 if not mas_flag:
-                    inc = self.cur_to_inc(current)
-                
-                if state.get_name()=='delimit':
-                    next_state = self.delim_transit[self.income[prev_inc]][self.income[inc]]
-                    if State.options[next_state]=='delimit':
-                        if buf.get()+current not in self.delim_ds:
-                            next_state = 8
-                            print('Error: unknown delimit group')
+                    self.inc = self.cur_to_inc(self.current)
+
+                if self.state.get_name()=='delimit':
+                    self.next_state = self.delim_transit[self.income[self.prev_inc]][self.income[self.inc]]
+                    if not isinstance(self.next_state , list) and State.options[self.next_state]=='delimit':
+                        if self.buf.get()+self.current not in self.delim_ds:
+                            self.next_state = 8
                 else:
-                    next_state = self.transit[state.get_id()][self.income[inc]]
+                    self.next_state = self.transit[self.state.get_id()][self.income[self.inc]]
 
-                if isinstance(next_state , list):
-                    #print('Massive', state.get_name())
+                if isinstance(self.next_state , list):
                     mas_flag = True
-                    #print(buf.get())
-                    if state.get_name()=='num_int':
-                        prev_cur = current
-                        current = self.f.read(1)
-                        prev_prev_inc = prev_inc
-                        prev_inc = inc
-                        inc = self.cur_to_inc(current)
-                        #print(prev_prev_inc, prev_inc, inc)
-                        
-                        if current.isdigit():
-                            buf.add(prev_cur)
-                            next_state = next_state[1]
-                            prev_state = state.get_id()
-                            state.set(next_state)
-                            #print(current, buf.get(), state.get_name())
-                        else:
-                            self.lex_array.append(Lexem(k, state.get_name(), buf.get()))
-                            k+=1
-                            buf.clear()
 
-                            buf.add(prev_cur)
-                            prev_state = state.get_id()
-                            next_state = next_state[0]
-                            state.set(next_state)
-                            #print(current, buf.get(), state.get_name())
-                            
-                    elif state.get_name()=='name':
-                        if buf.get() in self.keys:
-                            if buf.get()=='end':
-                                buf.add(current)
-                                prev_state = state.get_id()
-                                next_state = next_state[0]
-                                state.set(next_state)
+                    if self.state.get_name()=='num_int':
+                        self.prev_cur = self.current
+                        self.current = fin.read(1)
+                        self.prev_prev_inc = self.prev_inc
+                        self.prev_inc = self.inc
+                        self.inc = self.cur_to_inc(self.current)
+                        if self.current.isdigit():
+                            self.buf.add(self.prev_cur)
+                            self.next_state = self.next_state[1]
+                            self.prev_state = self.state.get_id()
+                            self.state.set(self.next_state)
+                        else:
+                            lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                            self.k+=1
+                            self.buf.clear()
+                            lex_found = True
+                            self.buf.add(self.prev_cur)
+                            self.prev_state = self.state.get_id()
+                            self.next_state = self.next_state[0]
+                            self.state.set(self.next_state)
+
+                    elif self.state.get_name()=='num_float':
+                        if self.income[self.inc]==3:
+                            if self.buf.get().rfind('e')==-1:
+                                self.prev_state = self.state.get_id()
+                                self.next_state = self.next_state[0]
+                                self.state.set(self.next_state)
+                                self.buf.add(self.current)
                             else:
-                                buf.add(current)
-                                prev_state = state.get_id()
-                                next_state = next_state[1]
-                                state.set(next_state)
-                        else:
-                            self.lex_array.append(Lexem(k, state.get_name(), buf.get()))
-                            k+=1
-                            buf.clear()
-                            
-                            buf.add(current)
-                            current = self.f.read(1)
-                            prev_prev_inc = prev_inc
-                            prev_inc = inc
-                            inc = self.cur_to_inc(current)
-                            #print(prev_prev_inc, prev_inc, inc)
-                            
-                            prev_state = state.get_id()
-                            state.set(next_state[2])
-                            self.lex_array.append(Lexem(k, state.get_name(), buf.get()))
-                            k+=1
-                            buf.clear()
-                            
-                            #buf.add(current)
-                            prev_state = state.get_id()
-                            next_state = self.delim_transit[self.income[prev_inc]][self.income[inc]]
-                            state.set(next_state)
-                            
-                    elif prev_inc==',':
-                        self.lex_array.append(Lexem(k, state.get_name(), buf.get()))
-                        k+=1
-                        buf.clear()
-                        
-                        buf.add(current)
-                        current = self.f.read(1)
-                        prev_prev_inc = prev_inc
-                        prev_inc = inc
-                        inc = self.cur_to_inc(current)
-                        if current.isdigit():
-                            next_state = next_state[0]
-                            prev_state = state.get_id()
-                            state.set(next_state)
-                        else:
-                            prev_state = state.get_id()
-                            state.set(next_state[1])
-                            self.lex_array.append(Lexem(k, state.get_name(), buf.get()))
-                            k+=1
-                            buf.clear()
-                            
-                            prev_state = state.get_id()
-                            next_state = self.delim_transit[self.income[prev_inc]][self.income[inc]]
-                            state.set(next_state)
+                                self.prev_state = self.state.get_id()
+                                self.next_state = self.next_state[1]
+                                self.state.set(self.next_state)
+                                self.buf.add(self.current)
+                                lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                                self.k+=1
+                                print('Error: unexpected symbol sequence',self.buf.get())
+                                err_mess = True
+                                self.buf.clear()
+                                lex_found = True
+                                
+                        elif self.income[self.inc]==8:
+                            if self.buf.get().rfind('e')==-1:
+                                self.prev_state = self.state.get_id()
+                                self.next_state = self.next_state[0]
+                                self.state.set(self.next_state)
+                                lex.append(Lexem(self.k, State.options[self.prev_state], self.buf.get()))
+                                self.k+=1
+                                self.buf.clear()
+                                lex_found = True
+                                self.buf.add(self.current)
+                            elif  self.buf.get().find('e')>self.buf.get().find('-'):
+                                self.next_state = self.next_state[1]
+                                self.prev_state = self.state.get_id()
+                                self.state.set(self.next_state)
+                                self.buf.add(self.current)
+                            else:
+                                self.prev_state = self.state.get_id()
+                                self.next_state = self.next_state[2]
+                                self.state.set(self.next_state)
+                                self.buf.add(self.current)
+                                lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                                self.k+=1
+                                print('Error: unexpected symbol sequence',self.buf.get())
+                                err_mess = True
+                                self.buf.clear()
+                                lex_found = True
+                        self.prev_cur = self.current
+                        self.current = fin.read(1)
+                        self.prev_prev_inc = self.prev_inc
+                        self.prev_inc = self.inc
+                        self.inc = self.cur_to_inc(self.current)
 
-                    elif state.get_name()=='start':
-                        buf.add(current)
-                        current = self.f.read(1)
-                        prev_prev_inc = prev_inc
-                        prev_inc = inc
-                        inc = self.cur_to_inc(current)
-
-                        if current.isdigit() and (prev_state==10 or prev_state==1):
-                            next_state = next_state[0]
-                            prev_state = state.get_id()
-                            state.set(next_state)
+                    elif self.state.get_name()=='name':
+                        if self.buf.get() in self.keys:
+                            if self.buf.get()=='end':
+                                lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                                self.k+=1
+                                self.buf.clear()
+                                lex_found = True
+                                self.prev_state = self.state.get_id()
+                                self.next_state = self.next_state[0]
+                                self.state.set(self.next_state)
+                            else:
+                                self.buf.add(self.current)
+                                self.prev_state = self.state.get_id()
+                                self.next_state = self.next_state[1]
+                                self.state.set(self.next_state)
+                                print('Error: unexpected symbol sequence',self.buf.get())
+                                err_mess = True
+                                lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                                self.k+=1
+                                self.buf.clear()
+                                lex_found = True
+                                self.prev_cur = self.current
+                                self.current = fin.read(1)
+                                self.prev_prev_inc = self.prev_inc
+                                self.prev_inc = self.inc
+                                self.inc = self.cur_to_inc(self.current)
                         else:
-                            prev_state = state.get_id()
-                            next_state = next_state[1]
-                            state.set(next_state)
-                            self.lex_array.append(Lexem(k, state.get_name(), buf.get()))
-                            k+=1
-                            buf.clear()
-                            next_state = self.delim_transit[self.income[prev_inc]][self.income[inc]]
-                            state.set(next_state)
+                            lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                            self.k+=1
+                            self.buf.clear()
+                            lex_found = True
+                            self.prev_state = self.state.get_id()
+                            self.state.set(self.next_state[2])
+                            
+
+                    elif self.prev_inc==',':
+                        lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                        self.k+=1
+                        self.buf.clear()
+                        lex_found = True
+                        self.current = fin.read(1)
+                        self.prev_prev_inc = self.prev_inc
+                        self.prev_inc = self.inc
+                        self.inc = self.cur_to_inc(self.current)
+                        if self.current.isdigit():
+                            self.buf.add(self.prev_inc)
+                            self.next_state = self.next_state[0]
+                            self.prev_state = self.state.get_id()
+                            self.state.set(self.next_state)
+                        else:
+                            self.buf.add(self.prev_inc)
+                            self.next_state = self.next_state[1]
+                            self.prev_state = self.state.get_id()
+                            self.state.set(self.next_state)
+
+                    elif self.state.get_name()=='start':
+                        self.buf.add(self.current)
+                        self.current = fin.read(1)
+                        self.prev_prev_inc = self.prev_inc
+                        self.prev_inc = self.inc
+                        self.inc = self.cur_to_inc(self.current)
+                        if self.current.isdigit() and (self.prev_state==10 or self.prev_state==1 or self.k==0):
+                            self.next_state = self.next_state[0]
+                            self.prev_state = self.state.get_id()
+                            self.state.set(self.next_state)
+                        else:
+                            self.prev_state = self.state.get_id()
+                            self.next_state = self.next_state[1]
+                            self.state.set(self.next_state)
+                            lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                            lex_found = True
+                            self.k+=1
+                            self.buf.clear()
+                            self.next_state = self.delim_transit[self.income[self.prev_inc]][self.income[self.inc]]
+                            self.state.set(self.next_state)
 
                     else:
-                        print('Error: unable to choose the next state')
-                                                
+                        self.prev_state = self.state.get_id()
+                        self.state.set(8)
+                        print('Error: unable to choose the next state', self.prev_state)
+                        lex_found = True
 
                 else:
-                    if prev_inc!='}':
-                        prev_state = state.get_id()
-                    state.set(next_state)
-                    mas_flag = False   
+                    if self.prev_inc!='}':
+                        self.prev_state = self.state.get_id()
+                    self.state.set(self.next_state)
+                    mas_flag = False
 
                 if not mas_flag:
-                    prev_inc = inc
-
-                    if state.get_name()!='start':
-                        buf.add(current)
-                        prev_cur = current
-                        current = self.f.read(1)
+                    self.prev_inc = self.inc
+                    if self.state.get_name()!='start':
+                        self.buf.add(self.current)
+                        self.prev_cur = self.current
+                        self.current = fin.read(1)
                     else:
-                        if State.options[prev_state]=='start':
-                            self.lex_array.append(Lexem(k, inc, current))
-                            prev_cur = current
-                            current = self.f.read(1)
-                        elif buf.get()[-1]=='"' or buf.get()[-1]=="'":
-                            self.lex_array.append(Lexem(k, State.options[60], buf.get()))
-                        else:
-                            self.lex_array.append(Lexem(k, State.options[prev_state], buf.get()))
+                        if State.options[self.prev_state]=='start':
+                            lex.append(Lexem(self.k, self.inc, self.current))
+                            self.prev_cur = self.current
+                            self.current = fin.read(1)
+                        elif not self.buf.isempty():
+                            if self.buf.get()[-1]=='"' or self.buf.get()[-1]=="'":
+                                lex.append(Lexem(self.k, State.options[60], self.buf.get()))
+                            else:
+                                lex.append(Lexem(self.k, State.options[self.prev_state], self.buf.get()))
 
-                        k+=1
-                        buf.clear()
+                        self.k+=1
+                        self.buf.clear()
+                        lex_found = True
 
-                    if current=='':
-                        if state.get_name()=='string':
-                            state.set(8)
-                        else:
-                            state.set(2)
+                if self.current=='':
+                    if self.state.get_name()=='string':
+                        self.prev_state = self.state.get_id()
+                        self.state.set(8)
+                        print('String seems to have no end')
+                        err_mess = True
+                    elif not self.buf.isempty():
+                        lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
+                        self.k+=1
+                        lex_found = True
+                        self.prev_state = self.state.get_id()
+                        self.state.set(1)
+                    else:
+                        self.prev_state = self.state.get_id()
+                        self.state.set(1)
+                        self.file_end = True
 
-                #if k>100:
-                #    state.set(2)
 
-            #print(state.get_name(),State.options[prev_state],inc, buf.get())
+        for a in lex:
+            fout.write(str(a.get())+'\n')
 
-        print('bugs: 2.3e')
-        
-        self.lex_array.append(Lexem(k, State.options[prev_state], buf.get()))
-        k+=1
-        self.lex_array.append(Lexem(k, state.get_name(), ''))
-        for i in self.lex_array:
-            print(i.get())
-
-        while current!='':
-            current = self.f.read(1)
-            if self.cur_to_inc(current)!='separ':
-                print('Error: found symbols after final tag')
-                break
-                
         
