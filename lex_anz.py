@@ -205,34 +205,45 @@ class Lex_analyzer:
         elif current=='':
             return 'none'
 
+    def make_lex(self,k,state,buf):
+        self.lex.append(Lexem(k,state,buf))
+        self.k+=1
+        self.buf.clear()
+        self.lex_found = True
+
+    def next_cur(self,fin):
+        self.prev_cur = self.current
+        self.current = fin.read(1)
+        self.prev_prev_inc = self.prev_inc
+        self.prev_inc = self.inc
+        self.inc = self.cur_to_inc(self.current)
+
+    def new_state(self,next_state):
+        self.prev_state = self.state.get_id()
+        self.next_state = next_state
+        self.state.set(self.next_state)
+
     def analyze(self,fin,fout):
-        lex = []
-        lex_found = False
+        self.lex = []
+        self.lex_found = False
         mas_flag = False
         err_mess = False
+        self.file_end = False
 
         if self.k==0:
             self.current = fin.read(1)
 
-        while not lex_found:            
+        while not self.lex_found:            
             if self.state.get_name()=='error':
                 if not err_mess and not self.buf.isempty():
                     print('Error: unexpected symbol sequence',self.buf.get())
-                    lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                    self.k+=1
+                    self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
                     err_mess = True
-                    self.buf.clear()
-                    lex_found = True
-                self.prev_state = self.state.get_id()
-                self.state.set(1)
+                self.new_state(1)
 
             elif self.state.get_name()=='final':
-                lex.append(Lexem(self.k, self.state.get_name(), self.current))
-                self.k+=1
-                self.buf.clear()
-                lex_found = True
-                self.prev_state = self.state.get_id()
-                self.state.set(1)
+                self.make_lex(str(self.k), self.state.get_name(), self.current)
+                self.new_state(1)
                 self.current = fin.read(1)
                 self.inc = self.cur_to_inc(self.current)
 
@@ -252,156 +263,82 @@ class Lex_analyzer:
                     mas_flag = True
 
                     if self.state.get_name()=='num_int':
-                        self.prev_cur = self.current
-                        self.current = fin.read(1)
-                        self.prev_prev_inc = self.prev_inc
-                        self.prev_inc = self.inc
-                        self.inc = self.cur_to_inc(self.current)
+                        self.next_cur(fin)
                         if self.current.isdigit():
                             self.buf.add(self.prev_cur)
-                            self.next_state = self.next_state[1]
-                            self.prev_state = self.state.get_id()
-                            self.state.set(self.next_state)
+                            self.new_state(self.next_state[1])
                         else:
-                            lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                            self.k+=1
-                            self.buf.clear()
-                            lex_found = True
+                            self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
                             self.buf.add(self.prev_cur)
-                            self.prev_state = self.state.get_id()
-                            self.next_state = self.next_state[0]
-                            self.state.set(self.next_state)
+                            self.new_state(self.next_state[0])
 
                     elif self.state.get_name()=='num_float':
                         if self.income[self.inc]==3:
                             if self.buf.get().rfind('e')==-1:
-                                self.prev_state = self.state.get_id()
-                                self.next_state = self.next_state[0]
-                                self.state.set(self.next_state)
+                                self.new_state(self.next_state[0])
                                 self.buf.add(self.current)
                             else:
-                                self.prev_state = self.state.get_id()
-                                self.next_state = self.next_state[1]
-                                self.state.set(self.next_state)
+                                self.new_state(self.next_state[1])
                                 self.buf.add(self.current)
-                                lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                                self.k+=1
                                 print('Error: unexpected symbol sequence',self.buf.get())
+                                self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
                                 err_mess = True
-                                self.buf.clear()
-                                lex_found = True
                                 
                         elif self.income[self.inc]==8:
                             if self.buf.get().rfind('e')==-1:
-                                self.prev_state = self.state.get_id()
-                                self.next_state = self.next_state[0]
-                                self.state.set(self.next_state)
-                                lex.append(Lexem(self.k, State.options[self.prev_state], self.buf.get()))
-                                self.k+=1
-                                self.buf.clear()
-                                lex_found = True
+                                self.new_state(self.next_state[0])
+                                self.make_lex(str(self.k), State.options[self.prev_state], self.buf.get())
                                 self.buf.add(self.current)
                             elif  self.buf.get().find('e')>self.buf.get().find('-'):
-                                self.next_state = self.next_state[1]
-                                self.prev_state = self.state.get_id()
-                                self.state.set(self.next_state)
+                                self.new_state(self.next_state[1])
                                 self.buf.add(self.current)
                             else:
-                                self.prev_state = self.state.get_id()
-                                self.next_state = self.next_state[2]
-                                self.state.set(self.next_state)
+                                self.new_state(self.next_state[2])
                                 self.buf.add(self.current)
-                                lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                                self.k+=1
                                 print('Error: unexpected symbol sequence',self.buf.get())
+                                self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
                                 err_mess = True
-                                self.buf.clear()
-                                lex_found = True
-                        self.prev_cur = self.current
-                        self.current = fin.read(1)
-                        self.prev_prev_inc = self.prev_inc
-                        self.prev_inc = self.inc
-                        self.inc = self.cur_to_inc(self.current)
+                        self.next_cur(fin)
 
                     elif self.state.get_name()=='name':
                         if self.buf.get() in self.keys:
                             if self.buf.get()=='end':
-                                lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                                self.k+=1
-                                self.buf.clear()
-                                lex_found = True
-                                self.prev_state = self.state.get_id()
-                                self.next_state = self.next_state[0]
-                                self.state.set(self.next_state)
+                                self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                                self.new_state(self.next_state[0])
                             else:
                                 self.buf.add(self.current)
-                                self.prev_state = self.state.get_id()
-                                self.next_state = self.next_state[1]
-                                self.state.set(self.next_state)
+                                self.new_state(self.next_state[1])
                                 print('Error: unexpected symbol sequence',self.buf.get())
                                 err_mess = True
-                                lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                                self.k+=1
-                                self.buf.clear()
-                                lex_found = True
-                                self.prev_cur = self.current
-                                self.current = fin.read(1)
-                                self.prev_prev_inc = self.prev_inc
-                                self.prev_inc = self.inc
-                                self.inc = self.cur_to_inc(self.current)
+                                self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                                self.next_cur(fin)
                         else:
-                            lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                            self.k+=1
-                            self.buf.clear()
-                            lex_found = True
-                            self.prev_state = self.state.get_id()
-                            self.state.set(self.next_state[2])
+                            self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                            self.new_state(self.next_state[2])
                             
 
                     elif self.prev_inc==',':
-                        lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                        self.k+=1
-                        self.buf.clear()
-                        lex_found = True
-                        self.current = fin.read(1)
-                        self.prev_prev_inc = self.prev_inc
-                        self.prev_inc = self.inc
-                        self.inc = self.cur_to_inc(self.current)
+                        self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                        self.next_cur(fin)
                         if self.current.isdigit():
                             self.buf.add(self.prev_inc)
-                            self.next_state = self.next_state[0]
-                            self.prev_state = self.state.get_id()
-                            self.state.set(self.next_state)
+                            self.new_state(self.next_state[0])
                         else:
                             self.buf.add(self.prev_inc)
-                            self.next_state = self.next_state[1]
-                            self.prev_state = self.state.get_id()
-                            self.state.set(self.next_state)
+                            self.new_state(self.next_state[1])
 
                     elif self.state.get_name()=='start':
                         self.buf.add(self.current)
-                        self.current = fin.read(1)
-                        self.prev_prev_inc = self.prev_inc
-                        self.prev_inc = self.inc
-                        self.inc = self.cur_to_inc(self.current)
+                        self.next_cur(fin)
                         if self.current.isdigit() and (self.prev_state==10 or self.prev_state==1 or self.k==0):
-                            self.next_state = self.next_state[0]
-                            self.prev_state = self.state.get_id()
-                            self.state.set(self.next_state)
+                            self.new_state(self.next_state[0])
                         else:
-                            self.prev_state = self.state.get_id()
-                            self.next_state = self.next_state[1]
-                            self.state.set(self.next_state)
-                            lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                            lex_found = True
-                            self.k+=1
-                            self.buf.clear()
-                            self.next_state = self.delim_transit[self.income[self.prev_inc]][self.income[self.inc]]
-                            self.state.set(self.next_state)
-
+                            self.new_state(self.next_state[1])
+                            self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                            self.new_state(self.delim_transit[self.income[self.prev_inc]][self.income[self.inc]])
+                            
                     else:
-                        self.prev_state = self.state.get_id()
-                        self.state.set(8)
+                        self.new_state(8)
                         print('Error: unable to choose the next state', self.prev_state)
                         lex_found = True
 
@@ -419,38 +356,30 @@ class Lex_analyzer:
                         self.current = fin.read(1)
                     else:
                         if State.options[self.prev_state]=='start':
-                            lex.append(Lexem(self.k, self.inc, self.current))
+                            self.make_lex(str(self.k), self.inc, self.current)
                             self.prev_cur = self.current
                             self.current = fin.read(1)
                         elif not self.buf.isempty():
                             if self.buf.get()[-1]=='"' or self.buf.get()[-1]=="'":
-                                lex.append(Lexem(self.k, State.options[60], self.buf.get()))
+                                self.make_lex(str(self.k), State.options[60], self.buf.get())
                             else:
-                                lex.append(Lexem(self.k, State.options[self.prev_state], self.buf.get()))
-
-                        self.k+=1
-                        self.buf.clear()
-                        lex_found = True
+                                self.make_lex(str(self.k), State.options[self.prev_state], self.buf.get())
+                                
 
                 if self.current=='':
                     if self.state.get_name()=='string':
-                        self.prev_state = self.state.get_id()
-                        self.state.set(8)
+                        self.new_state(8)
                         print('String seems to have no end')
                         err_mess = True
                     elif not self.buf.isempty():
-                        lex.append(Lexem(self.k, self.state.get_name(), self.buf.get()))
-                        self.k+=1
-                        lex_found = True
-                        self.prev_state = self.state.get_id()
-                        self.state.set(1)
+                        self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                        self.new_state(1)
                     else:
-                        self.prev_state = self.state.get_id()
-                        self.state.set(1)
+                        self.new_state(1)
                         self.file_end = True
 
 
-        for a in lex:
+        for a in self.lex:
             fout.write(str(a.get())+'\n')
 
         

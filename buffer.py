@@ -12,7 +12,4 @@ class Buffer:
         return self.inner
 
     def isempty(self):
-        if self.inner=='':
-            return True
-        else:
-            return False
+        return self.inner==''
