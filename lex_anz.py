@@ -1,7 +1,7 @@
 from lexem import Lexem
 from buffer import Buffer
 from state import State
-import pickle
+from admission import Admission
 
 class Lex_analyzer:
     keys = ['and', 'array', 'begin', 'case', 'const', 'div', 'do', 'downto', 'else', 'end',
@@ -113,31 +113,6 @@ class Lex_analyzer:
                           9: 8, 10: 1, 11: 8, 12: 8, 13: 1, 14: 1, 15: 1, 16: 8,
                           17: 8, 18: 1, 19: 8, 20: 1, 21: 1, 22: 1, 23: 8, 24: 1, 25: 1}}
 
-    income = {'letter': 1,
-              'letters_AF': 2,
-              'letter_e': 3,
-              'digit': 4,
-              'separ': 5,
-              '$': 6,
-              '+*': 7,
-              '-': 8,
-              '/': 9,
-              ',': 10,
-              '.': 11,
-              ':': 12,
-              ';': 13,
-              '(': 14,
-              ')': 15,
-              '[': 16,
-              ']': 17,
-              '{': 18,
-              '}': 19,
-              'dash2': 20,
-              '<>': 21,
-              '=': 22,
-              '_': 23,
-              'dash1': 24,
-              'none': 25}
 
     def __init__(self):
         self.buf = Buffer()
@@ -145,119 +120,92 @@ class Lex_analyzer:
         self.prev_state = 0
         self.next_state = 0
         self.current = ''
-        self.inc = ''
-        self.prev_inc = ''
-        self.k = 0
+        self.admis = ''
+        self.prev_admis = ''
+        self.k = 1
+        self.k_cur = 1
+        self.s = 1
         self.file_end = False
+        
+        self.new_line = False
 
     def is_finalised(self):
         return self.file_end
 
-    def cur_to_inc(self,current):
-        if current=='e':
-            return 'letter_e'
-        elif current in ['A','B','C','D','E','F']:
-            return 'letter_AF'
-        elif current.isalpha():
-            return 'letter'
-        elif current.isdigit():
-            return 'digit'
-        elif current in self.separs:
-            return 'separ'
-        elif current=='+' or current=='*':
-            return '+*'
-        elif current=='-':
-            return '-'
-        elif current=='/':
-            return '/'
-        elif current=='=':
-            return '='
-        elif current==',':
-            return ','
-        elif current=='.':
-            return '.'
-        elif current==':':
-            return ':'
-        elif current==';':
-            return ';'
-        elif current=='(':
-            return '('
-        elif current==')':
-            return ')'
-        elif current=='[':
-            return '['
-        elif current==']':
-            return ']'
-        elif current=='{':
-            return '{'
-        elif current=='}':
-            return '}'
-        elif current=='"':
-            return 'dash2'
-        elif current=="'":
-            return 'dash1'
-        elif current=='<' or current=='>':
-            return '<>'
-        elif current=='_':
-            return '_'
-        elif current=='$':
-            return '$'
-        elif current=='':
-            return 'none'
+    def cur_to_admis(self,current):
+        cur_d = {let1:'letter' for let1 in 'GHIJKLMNOPQRSTUVWXYZabcdfghijklmnopqrstuvwxyzАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя'}
+        cur_d.update([(let0,'letter_AF') for let0 in ['A','B','C','D','E','F']])
+        cur_d.update([(str(dig),'digit') for dig in range(10)])
+        cur_d.update([(sep,'separ') for sep in self.separs])
+        cur_d.update([(sig0,'+*') for sig0 in ['+','*']])
+        cur_d.update([(sig1,sig1) for sig1 in ['-','/','=',',','.',':',';','(',')','[',']','{','}','_','$']])
+        cur_d.update([(sig2,'<>') for sig2 in ['<','>']])
+        cur_d.update([("'",'dash1'),('"','dash2'),('','none'),('e','letter_e')])
+        return cur_d[current]
 
-    def make_lex(self,k,state,buf):
-        self.lex.append(Lexem(k,state,buf))
-        self.k+=1
+    def make_lex(self,s,k,state,buf):
+        if state!='separ' and state!='comment':
+            self.lex = Lexem(s,k,state,buf)
+            self.lex_found = True
         self.buf.clear()
-        self.lex_found = True
+        self.k = self.k_cur
+        if self.new_line:
+            self.s+=1
+            self.k_cur = 1
+            self.new_line = False
 
     def next_cur(self,fin):
         self.prev_cur = self.current
         self.current = fin.read(1)
-        self.prev_prev_inc = self.prev_inc
-        self.prev_inc = self.inc
-        self.inc = self.cur_to_inc(self.current)
+        self.k_cur+=1
+        if self.current=='\n':
+            self.new_line = True
+        self.prev_prev_admis = self.prev_admis
+        self.prev_admis = self.admis
+        self.admis = self.cur_to_admis(self.current)
 
     def new_state(self,next_state):
         self.prev_state = self.state.get_id()
         self.next_state = next_state
         self.state.set(self.next_state)
 
-    def analyze(self,fin,fout):
-        self.lex = []
-        self.lex_found = False
+    def analyze(self,fin):
         mas_flag = False
         err_mess = False
-        self.file_end = False
+        self.lex_found = False
 
-        if self.k==0:
-            self.current = fin.read(1)
+        if self.s==1 and self.k==1:
+            self.next_cur(fin)
+            if self.current=='\n':
+                self.new_line = True
 
         while not self.lex_found:            
             if self.state.get_name()=='error':
                 if not err_mess and not self.buf.isempty():
-                    print('Error: unexpected symbol sequence',self.buf.get())
-                    self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                    print('Error: unexpected symbol sequence',self.buf.get(),'on line',self.s,'in file',fin)
+                    self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
                     err_mess = True
                 self.new_state(1)
 
             elif self.state.get_name()=='final':
-                self.make_lex(str(self.k), self.state.get_name(), self.current)
+                self.make_lex(self.s, self.k, self.state.get_name(), self.current)
                 self.new_state(1)
-                self.current = fin.read(1)
-                self.inc = self.cur_to_inc(self.current)
+                self.next_cur(fin)
+                if self.current=='\n':
+                    self.new_line = True
+                self.admis = self.cur_to_admis(self.current)
 
             else:
                 if not mas_flag:
-                    self.inc = self.cur_to_inc(self.current)
+                    self.admis = self.cur_to_admis(self.current)
 
                 if self.state.get_name()=='delimit':
-                    self.next_state = self.delim_transit[self.income[self.prev_inc]][self.income[self.inc]]
+                    self.next_state = self.delim_transit[Admission.get_from_title(self.prev_admis)][Admission.get_from_title(self.admis)]
                     if not isinstance(self.next_state , list) and State.options[self.next_state]=='delimit':
                         if self.buf.get()+self.current not in self.delim_ds:
                             self.next_state = 8
                 else:
-                    self.next_state = self.transit[self.state.get_id()][self.income[self.inc]]
+                    self.next_state = self.transit[self.state.get_id()][Admission.get_from_title(self.admis)]
 
                 if isinstance(self.next_state , list):
                     mas_flag = True
@@ -268,26 +216,26 @@ class Lex_analyzer:
                             self.buf.add(self.prev_cur)
                             self.new_state(self.next_state[1])
                         else:
-                            self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                            self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
                             self.buf.add(self.prev_cur)
                             self.new_state(self.next_state[0])
 
                     elif self.state.get_name()=='num_float':
-                        if self.income[self.inc]==3:
+                        if Admission.get_from_title(self.admis)==3:
                             if self.buf.get().rfind('e')==-1:
                                 self.new_state(self.next_state[0])
                                 self.buf.add(self.current)
                             else:
                                 self.new_state(self.next_state[1])
                                 self.buf.add(self.current)
-                                print('Error: unexpected symbol sequence',self.buf.get())
-                                self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                                print('Error: unexpected symbol sequence',self.buf.get(),'on line',self.s,'in file',fin)
+                                self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
                                 err_mess = True
                                 
-                        elif self.income[self.inc]==8:
+                        elif Admission.get_from_title(self.admis)==8:
                             if self.buf.get().rfind('e')==-1:
                                 self.new_state(self.next_state[0])
-                                self.make_lex(str(self.k), State.options[self.prev_state], self.buf.get())
+                                self.make_lex(self.s, self.k, State.options[self.prev_state], self.buf.get())
                                 self.buf.add(self.current)
                             elif  self.buf.get().find('e')>self.buf.get().find('-'):
                                 self.new_state(self.next_state[1])
@@ -295,30 +243,30 @@ class Lex_analyzer:
                             else:
                                 self.new_state(self.next_state[2])
                                 self.buf.add(self.current)
-                                print('Error: unexpected symbol sequence',self.buf.get())
-                                self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                                print('Error: unexpected symbol sequence',self.buf.get(),'on line',self.s,'in file',fin)
+                                self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
                                 err_mess = True
                         self.next_cur(fin)
 
                     elif self.state.get_name()=='name':
                         if self.buf.get() in self.keys:
                             if self.buf.get()=='end':
-                                self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                                self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
                                 self.new_state(self.next_state[0])
                             else:
                                 self.buf.add(self.current)
                                 self.new_state(self.next_state[1])
-                                print('Error: unexpected symbol sequence',self.buf.get())
+                                print('Error: unexpected symbol sequence',self.buf.get(),'on line',self.s,'in file',fin)
                                 err_mess = True
-                                self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                                self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
                                 self.next_cur(fin)
                         else:
-                            self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                            self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
                             self.new_state(self.next_state[2])
                             
 
-                    elif self.prev_inc==',':
-                        self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                    elif self.prev_admis==',':
+                        self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
                         self.next_cur(fin)
                         if self.current.isdigit():
                             self.buf.add(self.prev_inc)
@@ -334,8 +282,8 @@ class Lex_analyzer:
                             self.new_state(self.next_state[0])
                         else:
                             self.new_state(self.next_state[1])
-                            self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
-                            self.new_state(self.delim_transit[self.income[self.prev_inc]][self.income[self.inc]])
+                            self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
+                            self.new_state(self.delim_transit[Admission.get_from_title(self.prev_admis)][Admission.get_from_title(self.admis)])
                             
                     else:
                         self.new_state(8)
@@ -343,27 +291,29 @@ class Lex_analyzer:
                         lex_found = True
 
                 else:
-                    if self.prev_inc!='}':
+                    if self.prev_admis!='}':
                         self.prev_state = self.state.get_id()
                     self.state.set(self.next_state)
                     mas_flag = False
 
                 if not mas_flag:
-                    self.prev_inc = self.inc
+                    self.prev_admis = self.admis
                     if self.state.get_name()!='start':
                         self.buf.add(self.current)
-                        self.prev_cur = self.current
-                        self.current = fin.read(1)
+                        self.next_cur(fin)
+                        if self.current=='\n':
+                            self.new_line = True
                     else:
                         if State.options[self.prev_state]=='start':
-                            self.make_lex(str(self.k), self.inc, self.current)
-                            self.prev_cur = self.current
-                            self.current = fin.read(1)
+                            self.make_lex(self.s, self.k, self.admis, self.current)
+                            self.next_cur(fin)
+                            if self.current=='\n':
+                                self.new_line = True
                         elif not self.buf.isempty():
                             if self.buf.get()[-1]=='"' or self.buf.get()[-1]=="'":
-                                self.make_lex(str(self.k), State.options[60], self.buf.get())
+                                self.make_lex(self.s, self.k, State.options[60], self.buf.get())
                             else:
-                                self.make_lex(str(self.k), State.options[self.prev_state], self.buf.get())
+                                self.make_lex(self.s, self.k, State.options[self.prev_state], self.buf.get())
                                 
 
                 if self.current=='':
@@ -372,14 +322,15 @@ class Lex_analyzer:
                         print('String seems to have no end')
                         err_mess = True
                     elif not self.buf.isempty():
-                        self.make_lex(str(self.k), self.state.get_name(), self.buf.get())
+                        self.make_lex(self.s, self.k, self.state.get_name(), self.buf.get())
                         self.new_state(1)
                     else:
                         self.new_state(1)
                         self.file_end = True
 
+                #print(self.s, self.k, self.current, self.state.get_name(), self.buf.get())
 
-        for a in self.lex:
-            fout.write(str(a.get())+'\n')
+
+        return self.lex
 
         
