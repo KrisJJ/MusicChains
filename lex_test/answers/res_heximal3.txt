@@ -1,0 +1,1 @@
+1	1	Error: wrong sequence of symbols: $aag
