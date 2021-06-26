@@ -1,4 +1,0 @@
-1	1	Float	1.2	1.2
-1	5	Float	1200.0	1.2e3
-1	11	Float	0.0012	1.2e-3
-1	18	Error: wrong sequence of symbols: 1.

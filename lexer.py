@@ -81,7 +81,7 @@ class Lexem:
             self.lexemType = 'Directory'
             self.lexemValue = bufferedString
         elif state is State.StIdent:
-            if bufferedString in Lex_analyzer.keywords:
+            if bufferedString in Lexer.keywords:
                 self.lexemType = 'Keyword'
             else:
                 self.lexemType = 'Identif'
@@ -116,15 +116,35 @@ class Lexem:
         elif state is State.StASCII:
             self.lexemType = 'Char'
             self.lexemValue = chr(int(bufferedString[1:]))
+        elif state is State.StFinal:
+            self.lexemType = 'Final'
+            self.lexemValue = bufferedString
 
-    def get(self):
+    def getString(self):
         if self.lexemType == 'Error':
             return f"{self.line}\t{self.pos}\tError: wrong sequence of symbols: {self.original}"
         else:
             return f"{self.line}\t{self.pos}\t{self.lexemType}\t{self.lexemValue}\t{self.original}"
+
+
+    def getType(self):
+        return self.lexemType
+
+
+    def getValue(self):
+        return self.lexemValue
+
+
+    def getPosition(self):
+        return f"line {self.line} position {self.pos}"
+
+
+    def get(self):
+        return self
+    
     
 
-class Lex_analyzer:
+class Lexer:
     keywords = [ 'and', 'asm', 'array', 'begin', 'case', 'const', 'constructor',
                  'destructor', 'div', 'do', 'downto', 'else', 'end', 'exports',
                  'file', 'for', 'function', 'goto', 'if', 'implementation', 'in',
@@ -515,50 +535,49 @@ class Lex_analyzer:
             return CurrentValue.ValUnknown
 
 
-    def isEOF(self):
-        return self.isEndOfFile
-
-
     def isError(self):
         return self.isErrorCaught
 
 
     def analyze(self):
-        self.lexemIsFound = False
-        while not self.lexemIsFound:
-            if not self.state is State.StStart or self.currentSymbol == '':
-                self.currentSymbol = self.getNextSymbol()
+        if self.isEndOfFile:
+            self.lexem = self.lexem = Lexem(self.lexemLine, self.lexemPosition, State.StFinal, '')
+        else:
+            self.lexemIsFound = False
+            while not self.lexemIsFound:
+                if not self.state is State.StStart or self.currentSymbol == '':
+                    self.currentSymbol = self.getNextSymbol()
 
-            self.currentValue = self.getNextValue()
+                self.currentValue = self.getNextValue()
 
-            self.prevState = self.state
-            self.state = self.transit[self.state][self.currentValue]
+                self.prevState = self.state
+                self.state = self.transit[self.state][self.currentValue]
 
-            if self.state == State.StError:
-                self.isErrorCaught = True
+                if self.state == State.StError:
+                    self.isErrorCaught = True
 
-            if self.state is State.StOper and not self.buf.isEmpty():
-                probOper = self.buf.get() + self.currentSymbol
-                if not probOper in self.pairOpers:
-                    self.lexem = Lexem(self.lexemLine, self.lexemPosition, self.prevState, self.buf.get())
+                if self.state is State.StOper and not self.buf.isEmpty():
+                    probOper = self.buf.get() + self.currentSymbol
+                    if not probOper in self.pairOpers:
+                        self.lexem = Lexem(self.lexemLine, self.lexemPosition, self.prevState, self.buf.get())
+                        self.lexemPosition = self.currentPosition
+                        self.lexemLine = self.currentLine
+                        self.lexemIsFound = True
+                        self.buf.clear()
+
+                elif self.state is State.StStart:
+                    if self.prevState!=State.StSpace and self.prevState!=State.StCloseCom:
+                        self.lexem = Lexem(self.lexemLine, self.lexemPosition, self.prevState, self.buf.get())
+                        self.lexemIsFound = True
                     self.lexemPosition = self.currentPosition
                     self.lexemLine = self.currentLine
-                    self.lexemIsFound = True
                     self.buf.clear()
+                    
 
-            elif self.state is State.StStart:
-                if self.prevState!=State.StSpace and self.prevState!=State.StCloseCom:
-                    self.lexem = Lexem(self.lexemLine, self.lexemPosition, self.prevState, self.buf.get())
-                    self.lexemIsFound = True
-                self.lexemPosition = self.currentPosition
-                self.lexemLine = self.currentLine
-                self.buf.clear()
-                
-
-            if self.currentSymbol == '':
-                self.isEndOfFile = True
-            elif not self.state is State.StStart:
-                self.buf.add(self.currentSymbol)
+                if self.currentSymbol == '':
+                    self.isEndOfFile = True
+                elif not self.state is State.StStart:
+                    self.buf.add(self.currentSymbol)
 
         return self.lexem
                 
