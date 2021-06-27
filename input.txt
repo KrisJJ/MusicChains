@@ -1,1 +1,7 @@
-(1+2)/(4+9))
+begin
+if (a>0) and a or b  then
+begin
+	1+2;
+	3+4
+end;
+end.

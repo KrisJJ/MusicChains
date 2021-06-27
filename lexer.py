@@ -77,6 +77,7 @@ class Lexem:
 
         if state is State.StError:
             self.lexemType = 'Error'
+            self.lexemValue = 'wrong sequence of symbols'
         elif state is State.StCloseDir:
             self.lexemType = 'Directory'
             self.lexemValue = bufferedString
@@ -122,7 +123,7 @@ class Lexem:
 
     def getString(self):
         if self.lexemType == 'Error':
-            return f"{self.line}\t{self.pos}\tError: wrong sequence of symbols: {self.original}"
+            return f"{self.line}\t{self.pos}\tError: {self.lexemValue}: {self.original}"
         else:
             return f"{self.line}\t{self.pos}\t{self.lexemType}\t{self.lexemValue}\t{self.original}"
 

@@ -21,36 +21,40 @@ def parseAnalysis():
 
 
 def parseTest():
-    qDatDir = '.\\questions'
-    aDatDir = '.\\answers'
+    qDatDir = '.\\pars_test\\questions'
+    aDatDir = '.\\pars_test\\answers'
+    outFile = '.\\output.txt'
     qFiles = [os.path.join(qDatDir,x) for x in os.listdir(qDatDir)]
     aFiles = [os.path.join(aDatDir,x) for x in os.listdir(aDatDir)]
     total = 0
     for i in range(len(qFiles)):
         conformFlag = True
         qFin = open(qFiles[i], 'r', encoding='utf-8')
-        aFin = open(aFiles[i], 'r', encoding='utf-8')
-        parser = Parser(fin)
+        fout = open(outFile, 'w', encoding='utf-8')
+        parser = Parser(qFin)
         isEOF = False
-        allMadeLex = ''
-        allReadLex = ''
         while not isEOF and conformFlag:
-            lex = lexer.analyze()
-            if lex.getType() == 'Final':
+            p = parser.analyze()
+            p.draw(0,fout)
+            if parser.isEOF or parser.isError:
                 isEOF = True
-            madeLex = lex.getString()+'\n'
-            readLex = aFin.readline()
-            if madeLex != readLex:
-                conformFlag = False
-            allMadeLex += madeLex
-            allReadLex += readLex
-            #print(madeLex)
-            #print(readLex)
+
+        qFin.close()
+        fout.close()
+        print('done')
+         
+        aFin = open(aFiles[i], 'r', encoding='utf-8')       
+        aText = aFin.read()
+        fout = open(outFile, 'r', encoding='utf-8')
+        text = fout.read()
+        if aText != text:
+            conformFlag = False
             
         if conformFlag:
             total += 1
             
-        print(len(allMadeLex), len(allReadLex))
+        print(aText)
+        print(text)
         
     print(f"{total} tests from {len(qFiles)} are cleared.")  
 
@@ -74,8 +78,8 @@ def lexAnalysis():
 
 
 def lexTest():
-    qDatDir = '.\\questions'
-    aDatDir = '.\\answers'
+    qDatDir = '.\\lex_test\\questions'
+    aDatDir = '.\\lex_test\\answers'
     qFiles = [os.path.join(qDatDir,x) for x in os.listdir(qDatDir)]
     aFiles = [os.path.join(aDatDir,x) for x in os.listdir(aDatDir)]
     total = 0
@@ -104,6 +108,9 @@ def lexTest():
             total += 1
             
         print(len(allMadeLex), len(allReadLex))
+
+        aFin.close()
+        qFin.close()
         
     print(f"{total} tests from {len(qFiles)} are cleared.")       
             
