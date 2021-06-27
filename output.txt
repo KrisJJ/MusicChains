@@ -1,19 +1,35 @@
 begin
+└-readln
+  └-s1
+└-s2
+  └-:=
+  └-''
+└-for
+  └-i
+  └-downto
+    └-length
+      └-s1
+    └-1
+  └-begin
+    └-s2
+      └-:=
+      └-+
+        └-s2
+        └-s1
+          └-[
+            └-i
+          └-]
+    └-end
 └-if
-  └-or
-    └-and
-      └->
-        └-a
-        └-0
-      └-a
-    └-b
+  └-=
+    └-s1
+    └-s2
   └-then
-    └-begin
-      └-+
-        └-1
-        └-2
-      └-+
-        └-3
-        └-4
-      └-end
+    └-writeln
+      └-s1
+      └-' - yes'
+  └-else
+    └-writeln
+      └-s1
+      └-' - no'
 └-end

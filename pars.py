@@ -48,6 +48,26 @@ class FloatNode(Node):
         fout.write('  '*(deep-1)+ '└-' + str(self.lexem.getValue())+'\n')
 
 
+class StringNode(Node):
+    lexem = None
+    
+    def __init__(self,inputLexem):
+        self.lexem = inputLexem
+
+    def draw(self,deep,fout):
+        fout.write('  '*(deep-1)+ '└-' + str(self.lexem.getValue())+'\n')
+
+
+class CharNode(Node):
+    lexem = None
+    
+    def __init__(self,inputLexem):
+        self.lexem = inputLexem
+
+    def draw(self,deep,fout):
+        fout.write('  '*(deep-1)+ '└-' + str(self.lexem.getValue())+'\n')
+
+
 class IdentifNode(Node):
     lexem = None
     
@@ -75,6 +95,27 @@ class BinOperNode(Node):
         else:
             fout.write(str(self.operPart.getValue())+'\n')
         self.leftPart.draw(deep+1,fout)
+        self.rightPart.draw(deep+1,fout)
+
+
+class AssignNode(Node):
+    leftPart = None
+    operPart = None
+    rightPart = None
+    
+    def __init__(self,aLeft,aOper,aRight):
+        self.leftPart = aLeft
+        self.operPart = aOper
+        self.rightPart = aRight
+        
+
+    def draw(self,deep,fout):
+        self.leftPart.draw(deep,fout)
+        if deep>0:
+            fout.write('  '*(deep)+ '└-' + str(self.operPart.getValue())+'\n')
+        else:
+            fout.write('└-' + str(self.operPart.getValue())+'\n')
+        
         self.rightPart.draw(deep+1,fout)
 
 
@@ -183,7 +224,10 @@ class ForNode(Node):
 
         self.identifPart.draw(deep+1,fout)
 
-        self.coursePart.draw(deep+1,fout)
+        if deep>0:
+            fout.write('  '*(deep)+ '└-' + str(self.coursePart.getValue())+'\n')
+        else:
+            fout.write('└-' + str(self.coursePart.getValue())+'\n')
 
         self.startPart.draw(deep+2,fout)
 
@@ -245,6 +289,60 @@ class MainNode(Node):
         self.rightPart.draw(deep,fout)
 
 
+class FunctionNode(Node):
+    leftPart = None
+    rightPart = None
+
+    def __init__(self,left,right):
+        self.leftPart = left
+        self.rightPart = right
+
+    def draw(self,deep,fout):
+        self.leftPart.draw(deep,fout)
+        self.rightPart.draw(deep+1,fout)
+
+
+class ArrayNode(Node):
+    leftPart = None
+    rightPart = None
+
+    def __init__(self,left,right):
+        self.leftPart = left
+        self.rightPart = right
+
+    def draw(self,deep,fout):
+        self.leftPart.draw(deep,fout)
+        self.rightPart.draw(deep,fout)
+
+
+class ArrayElemNode(Node):
+    leftPart = None
+    rightPart = None
+    leftBracket = None
+    rightBracket = None
+
+    def __init__(self,left,brLeft,right,brRight):
+        self.leftPart = left
+        self.rightPart = right
+        self.leftBracket = brLeft
+        self.rightBracket = brRight
+
+    def draw(self,deep,fout):
+        self.leftPart.draw(deep,fout)
+
+        if deep>0:
+            fout.write('  '*(deep)+ '└-' + str(self.leftBracket.getValue())+'\n')
+        else:
+            fout.write('└-' + str(self.leftBracket.getValue())+'\n')
+                
+        self.rightPart.draw(deep+2,fout)
+
+        if deep>0:
+            fout.write('  '*(deep)+ '└-' + str(self.rightBracket.getValue())+'\n')
+        else:
+            fout.write('└-' + str(self.rightBracket.getValue())+'\n')
+
+
 class EmptyNode(Node):
     def draw(self,deep,fout):
         pass
@@ -271,7 +369,8 @@ class Parser:
         while (lexem.getType() != 'Integer' and lexem.getType() != 'Float' and
                lexem.getType() != 'Identif' and lexem.getType() != 'Operator' and
                lexem.getType() != 'Separator' and lexem.getType() != 'Final' and
-               lexem.getType() != 'Error' and lexem.getType() != 'Keyword'):
+               lexem.getType() != 'Error' and lexem.getType() != 'Keyword' and
+               lexem.getType() != 'String' and lexem.getType() != 'Char'):
             lexem = self.lexer.analyze()
             print(lexem.getValue())
 
@@ -299,7 +398,8 @@ class Parser:
         left = self.parseFactor()
         oper = self.currentLexem
         self.isMoved = False
-        while oper.getValue() == '*' or oper.getValue() == '/':
+        while (oper.getValue() == '*' or oper.getValue() == '/' or
+               oper.getValue() == 'div' or oper.getValue() == 'mod'):
             right = self.parseFactor()
             left = BinOperNode(left, oper, right)
             oper = self.currentLexem
@@ -318,17 +418,26 @@ class Parser:
             self.isMoved = False
             
         if self.currentLexem.getType() == 'Identif':
-            temperNode = IdentifNode(self.currentLexem)
-            self.currentLexem = self.getNextLexem()
-            self.isMoved = True
+            temperNode = self.parseIdentif()
             
         elif self.currentLexem.getType() == 'Integer':
             temperNode = IntegerNode(self.currentLexem)
             self.currentLexem = self.getNextLexem()
+            print('Moved',self.currentLexem.getValue())
             self.isMoved = True
             
         elif self.currentLexem.getType() == 'Float':
             temperNode = FloatNode(self.currentLexem)
+            self.currentLexem = self.getNextLexem()
+            self.isMoved = True
+
+        elif self.currentLexem.getType() == 'String':
+            temperNode = StringNode(self.currentLexem)
+            self.currentLexem = self.getNextLexem()
+            self.isMoved = True
+
+        elif self.currentLexem.getType() == 'Char':
+            temperNode = CharNode(self.currentLexem)
             self.currentLexem = self.getNextLexem()
             self.isMoved = True
             
@@ -350,7 +459,7 @@ class Parser:
         elif self.currentLexem.getType() == 'Final':
             if self.parentes > 0:
                 self.isError = True
-                print('Error end')
+                print('Error end1')
                 return ErrorNode(self.currentLexem,'Expected ")"')
             else:
                 self.isEOF = True
@@ -399,6 +508,7 @@ class Parser:
                 if self.currentLexem.getValue() == 'begin':
                     right = self.parseBlock()
                     left = MainNode(left,right)
+                    break
                     
                 elif self.currentLexem.getValue() == 'while':
                     right = self.parseWhile()
@@ -422,7 +532,8 @@ class Parser:
                     return ErrorNode(self.currentLexem,'Bad keyword')
 
             elif self.currentLexem.getType() == 'Identif':
-                #{}
+                right = self.parseIdentif()
+                left = MainNode(left,right)
 
             else:
                 self.isMoved = True
@@ -434,16 +545,15 @@ class Parser:
                     self.currentLexem.getValue() == 'else'):
                 print('Not stoper, wait ;')
                 if self.currentLexem.getValue() == ';':
+                    print('founded ;')
                     self.currentLexem = self.getNextLexem()
                     if self.currentLexem.getType() == 'Final':
                         self.isError = True
                         print('Error ;')
                         return ErrorNode(self.currentLexem,'Expected "."')
                     else:
-                        self.isMoved = True
                         right = EmptyNode()
                         left = MainNode(left,right)
-                        print('founded ;')
 
                 elif self.currentLexem.getValue() == '.':
                     self.currentLexem = self.getNextLexem()
@@ -478,6 +588,7 @@ class Parser:
         print('Finished PB')
         if endPart.getValue() == 'end':
             self.currentLexem = self.getNextLexem()
+            #self.isMoved = True
             return BlockNode(beginPart,mainPart,endPart)
         elif endPart.getType() == 'Error':
             self.isErrore = True
@@ -611,9 +722,14 @@ class Parser:
     def parseFor(self):
         print('Pfor')
         forPart = self.currentLexem
-        #identifPart = None
+        self.currentLexem = self.getNextLexem()
+        if self.currentLexem.getType() == 'Identif':
+            identifPart = IdentifNode(self.currentLexem)
+        else:
+            return ErrorNode(self.currentLexem,'Expected Identificator')
+        self.currentLexem = self.getNextLexem()
         comsPart = self.currentLexem
-        if comsPart.getValue() != ':':
+        if comsPart.getValue() != ':=':
             self.isError = True
             print('Error :')
             return ErrorNode(comsPart,'Expected ":"') 
@@ -629,6 +745,88 @@ class Parser:
         print('Finished Pfor')
         return ForNode(forPart,identifPart,startPart,coursePart,endPart,mainPart)
 
+
+    def parseIdentif(self):
+        print('Pid')
+        print('ismoved',self.isMoved)
+        if not self.isMoved:
+            left = IdentifNode(self.currentLexem)
+            self.currentLexem = self.getNextLexem()
+        else:
+            left = EmptyNode()
+            self.isMoved = False
+
+        if self.currentLexem.getValue() == '.':
+            self.currentLexem = self.getNextLexem()
+            right = self.parseIdentif()
+            left = FunctionNode(left,right)
+
+        elif self.currentLexem.getValue() == ':=':
+            oper = self.currentLexem
+            right = self.parseExpr()
+            left = AssignNode(left,oper,right)
+
+        elif self.currentLexem.getValue() == '[':
+            brLeft = self.currentLexem
+            right = self.parseExpr()
+            if self.currentLexem.getValue() == ']':
+                brRight = self.currentLexem
+                left = ArrayElemNode(left,brLeft,right,brRight)
+                self.currentLexem = self.getNextLexem()
+                self.isMoved = True
+                right = self.parseIdentif()
+                left = FunctionNode(left,right)
+            else:
+                print('Current',self.currentLexem.getValue())
+                self.isError = True
+                print('Error ]')
+                left = ErrorNode(self.currentLexem,'Expected "]"')
+
+        elif self.currentLexem.getValue() == '(':
+            right = self.parseArray()
+            left = FunctionNode(left,right)
+            self.currentLexem = self.getNextLexem()
+            self.isMoved = True
+            right = self.parseIdentif()
+            left = FunctionNode(left,right)
+
+        print('Finished Pid')
+
+        return left
+
+
+    def parseArray(self):
+        print('PA')
+        '''left = self.parseExpr()
+        oper = self.currentLexem
+        self.isMoved = False'''
+        left = EmptyNode()
+        self.currentLexem = self.getNextLexem()
+        self.isMoved = True
+        if self.currentLexem.getValue() ==')':
+            oper = self.currentLexem
+        else:
+            left = self.parseExpr()
+            oper = self.currentLexem
+            self.isMoved = False
+            
+        while oper.getValue() == ',':
+            right = self.parseExpr()
+            left = ArrayNode(left,right)
+            '''self.currentLexem = self.getNextLexem()'''
+            oper = self.currentLexem
+            self.isMoved = False
+
+        print('Finished PA')
+
+        if oper.getValue() == ')':
+            return left
+        
+        else:
+            self.isError = True
+            print('Error unexpected2')
+            return ErrorNode(oper,'Unexpected symbol')
+        
 
     def analyze(self):
         if not self.currentLexem is None:

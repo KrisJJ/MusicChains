@@ -1,7 +1,8 @@
 begin
-if (a>0) and a or b  then
-begin
-	1+2;
-	3+4
-end;
+    readln(s1); s2:='';
+    for i:=length(s1) downto 1 do begin
+       s2:=s2+s1[i];
+    end;
+    if s1=s2 then writeln(s1, ' - yes')
+             else  writeln(s1, ' - no');
 end.
