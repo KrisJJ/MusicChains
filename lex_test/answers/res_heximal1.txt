@@ -1,2 +1,0 @@
-1	1	Integer	2730	$aaa
-1	5	Final		

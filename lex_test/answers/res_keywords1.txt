@@ -1,0 +1,10 @@
+1	1	Keyword	var	var
+2	1	Keyword	begin	begin
+3	1	Keyword	end	end
+4	1	Keyword	if	if
+5	1	Keyword	then	then
+6	1	Keyword	else	else
+7	1	Keyword	do	do
+8	1	Keyword	until	until
+9	1	Keyword	while	while
+10	1	Keyword	for	for	

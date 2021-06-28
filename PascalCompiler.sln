@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PascalCompiler", "PascalCompiler.pyproj", "{F680A6BE-4535-4E4E-B5E0-4E65B690B5D4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F680A6BE-4535-4E4E-B5E0-4E65B690B5D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F680A6BE-4535-4E4E-B5E0-4E65B690B5D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A4F8F4C6-04C7-45D2-A3FC-49D95354E909}
+	EndGlobalSection
+EndGlobal

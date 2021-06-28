@@ -1,27 +1,27 @@
 from enum import Enum
 
-class CurrentValue(Enum):
-    ValUnknown = 0
-    ValAF = 1
-    ValE = 2
-    ValLetter = 3
-    Val01 = 4
-    Val27 = 5
-    Val89 = 6
-    ValSpace = 7
-    ValMinus = 8
-    ValOper = 9
-    ValCompar = 10
-    ValEqual = 11
-    ValDot = 12
-    ValSepar = 13
-    ValOpenCom = 14
-    ValCloseCom = 15
-    ValQuote = 16
-    ValDollar = 17
-    ValPercent = 18
-    ValAmper = 19
-    ValOctot = 20
+class CharType(Enum):
+    CTUnknown = 0
+    CTAF = 1
+    CTE = 2
+    CTLetter = 3
+    CT01 = 4
+    CT27 = 5
+    CT89 = 6
+    CTSpace = 7
+    CTMinus = 8
+    CTOper = 9
+    CTCompar = 10
+    CTEqual = 11
+    CTDot = 12
+    CTSepar = 13
+    CTOpenCom = 14
+    CTCloseCom = 15
+    CTQuote = 16
+    CTDollar = 17
+    CTPercent = 18
+    CTAmper = 19
+    CTOctot = 20
 
 
 class State(Enum):
@@ -37,7 +37,7 @@ class State(Enum):
     StDecimal = 10
     StBinary = 11
     StOctal = 12
-    StHeximal = 13
+    StHexadecimal = 13
     StRealWDot = 14
     StRealWDec = 15
     StRealWE = 16
@@ -78,45 +78,79 @@ class Lexem:
         if state is State.StError:
             self.lexemType = 'Error'
             self.lexemValue = 'wrong sequence of symbols'
+
         elif state is State.StCloseDir:
             self.lexemType = 'Directory'
             self.lexemValue = bufferedString
+
         elif state is State.StIdent:
             if bufferedString in Lexer.keywords:
                 self.lexemType = 'Keyword'
             else:
                 self.lexemType = 'Identif'
             self.lexemValue = bufferedString
+
         elif state is State.StDecimal:
             self.lexemType = 'Integer'
             self.lexemValue = int(bufferedString)
+            if self.lexemValue > 2147483647 or self.lexemValue < -2147483648:
+                self.lexemType = 'Error'
+                self.lexemValue = 'unable to present as integer'
+
         elif state is State.StBinary:
             self.lexemType = 'Integer'
             self.lexemValue = int(bufferedString[1:],2)
+            if self.lexemValue > 2147483647 or self.lexemValue < -2147483648:
+                self.lexemType = 'Error'
+                self.lexemValue = 'unable to present as integer'
+
         elif state is State.StOctal:
             self.lexemType = 'Integer'
             self.lexemValue = int(bufferedString[1:],8)
-        elif state is State.StHeximal:
+            if self.lexemValue > 2147483647 or self.lexemValue < -2147483648:
+                self.lexemType = 'Error'
+                self.lexemValue = 'unable to present as integer'
+
+        elif state is State.StHexadecimal:
             self.lexemType = 'Integer'
             self.lexemValue = int(bufferedString[1:],16)
+            if self.lexemValue > 2147483647 or self.lexemValue < -2147483648:
+                self.lexemType = 'Error'
+                self.lexemValue = 'unable to present as integer'
+                
+
         elif state is State.StRealWDec or state is State.StRealFull:
             self.lexemType = 'Float'
             self.lexemValue = float(bufferedString)
+            if self.lexemValue > 1.8e307+9 or self.lexemValue < -1.8e307-9:
+                self.lexemType = 'Error'
+                self.lexemValue = 'unable to present as float'
+
         elif state is State.StCloseChar:
             self.lexemType = 'Char'
             self.lexemValue = bufferedString
+
         elif state is State.StCloseString:
             self.lexemType = 'String'
             self.lexemValue = bufferedString
+
         elif state is State.StOper:
             self.lexemType = 'Operator'
             self.lexemValue = bufferedString
+
         elif state is State.StSepar:
             self.lexemType = 'Separator'
             self.lexemValue = bufferedString
+
         elif state is State.StASCII:
-            self.lexemType = 'Char'
-            self.lexemValue = chr(int(bufferedString[1:]))
+            tempervalue = int(bufferedString[1:])
+            if tempervalue>127 or tempervalue<0:
+                self.lexemType = 'Error'
+                self.lexemValue = 'unable to get ASCII symbol from utf-8 code'
+            else:
+                self.lexemType = 'Char'
+                self.lexemValue = chr(tempervalue)
+
         elif state is State.StFinal:
             self.lexemType = 'Final'
             self.lexemValue = bufferedString
@@ -169,302 +203,175 @@ class Lexer:
 
     separs = [' ', '\n', '\t', '\0', '\r']
 
-    transit = {State.StStart: {CurrentValue.ValAF: State.StIdent,
-                               CurrentValue.ValE: State.StIdent,
-                               CurrentValue.ValLetter: State.StIdent,
-                               CurrentValue.Val01: State.StDecimal,
-                               CurrentValue.Val27: State.StDecimal,
-                               CurrentValue.Val89: State.StDecimal,
-                               CurrentValue.ValSpace: State.StSpace,
-                               CurrentValue.ValMinus: State.StOper,
-                               CurrentValue.ValOper: State.StOper,
-                               CurrentValue.ValCompar: State.StOper,
-                               CurrentValue.ValEqual: State.StOper,
-                               CurrentValue.ValDot: State.StOper,
-                               CurrentValue.ValSepar: State.StSepar,
-                               CurrentValue.ValOpenCom: State.StOpenCom,
-                               CurrentValue.ValCloseCom: State.StError,
-                               CurrentValue.ValQuote: State.StOpenChar,
-                               CurrentValue.ValDollar: State.StHeximal,
-                               CurrentValue.ValPercent: State.StBinary,
-                               CurrentValue.ValAmper: State.StAmper,
-                               CurrentValue.ValOctot: State.StASCII,
-                               CurrentValue.ValUnknown: State.StError},
+    transit = {State.StStart: {CharType.CTAF: State.StIdent,
+                               CharType.CTE: State.StIdent,
+                               CharType.CTLetter: State.StIdent,
+                               CharType.CT01: State.StDecimal,
+                               CharType.CT27: State.StDecimal,
+                               CharType.CT89: State.StDecimal,
+                               CharType.CTSpace: State.StSpace,
+                               CharType.CTMinus: State.StOper,
+                               CharType.CTOper: State.StOper,
+                               CharType.CTCompar: State.StOper,
+                               CharType.CTEqual: State.StOper,
+                               CharType.CTDot: State.StOper,
+                               CharType.CTSepar: State.StSepar,
+                               CharType.CTOpenCom: State.StOpenCom,
+                               CharType.CTCloseCom: State.StError,
+                               CharType.CTQuote: State.StOpenChar,
+                               CharType.CTDollar: State.StHexadecimal,
+                               CharType.CTPercent: State.StBinary,
+                               CharType.CTAmper: State.StAmper,
+                               CharType.CTOctot: State.StASCII,
+                               CharType.CTUnknown: State.StError},
                   
-                  State.StFinal: {i: State.StError for i in CurrentValue},
+                  State.StFinal: {i: State.StError for i in CharType},
 
-                  State.StError: {i: State.StStart for i in CurrentValue},
+                  State.StError: {i: State.StStart for i in CharType},
 
-                  State.StSpace: {i: State.StStart if i!=CurrentValue.ValUnknown
-                                  else State.StError for i in CurrentValue},
+                  State.StSpace: {i: State.StStart if i != CharType.CTUnknown
+                                  else State.StError
+                                  for i in CharType},
 
-                  State.StOpenCom: {i: State.StOpenCom if i!=CurrentValue.ValCloseCom
-                                    and i!=CurrentValue.ValDollar and i!=CurrentValue.ValUnknown
-                                    else State.StCloseCom if i!=CurrentValue.ValDollar
-                                    and i!=CurrentValue.ValUnknown else State.StOpenDir
-                                    if i!=CurrentValue.ValUnknown else State.StError
-                                    for i in CurrentValue},
+                  State.StOpenCom: {i: State.StOpenCom if not i in [CharType.CTCloseCom, CharType.CTDollar, CharType.CTUnknown]
+                                    else State.StCloseCom if not i in [CharType.CTDollar, CharType.CTUnknown]
+                                    else State.StOpenDir if i!=CharType.CTUnknown
+                                    else State.StError
+                                    for i in CharType},
 
-                  State.StCloseCom: {i: State.StStart if i!=CurrentValue.ValUnknown
-                                     else State.StError for i in CurrentValue},
+                  State.StCloseCom: {i: State.StStart if i!=CharType.CTUnknown
+                                     else State.StError
+                                     for i in CharType},
 
-                  State.StOpenDir: {i: State.StOpenCom if i!=CurrentValue.ValCloseCom
-                                    and i!=CurrentValue.ValUnknown else State.StCloseDir
-                                    if i!=CurrentValue.ValUnknown else State.StError
-                                    for i in CurrentValue},
+                  State.StOpenDir: {i: State.StOpenCom if not i in [CharType.CTCloseCom, CharType.CTUnknown]
+                                    else State.StCloseDir if i!=CharType.CTUnknown
+                                    else State.StError
+                                    for i in CharType},
 
-                  State.StCloseDir: {i: State.StStart if i!=CurrentValue.ValUnknown
-                                     else State.StError for i in CurrentValue},
+                  State.StCloseDir: {i: State.StStart if i!=CharType.CTUnknown
+                                     else State.StError
+                                     for i in CharType},
 
-                  State.StIdent: {CurrentValue.ValAF: State.StIdent,
-                                  CurrentValue.ValE: State.StIdent,
-                                  CurrentValue.ValLetter: State.StIdent,
-                                  CurrentValue.Val01: State.StIdent,
-                                  CurrentValue.Val27: State.StIdent,
-                                  CurrentValue.Val89: State.StIdent,
-                                  CurrentValue.ValSpace: State.StStart,
-                                  CurrentValue.ValMinus: State.StStart,
-                                  CurrentValue.ValOper: State.StStart,
-                                  CurrentValue.ValCompar: State.StStart,
-                                  CurrentValue.ValEqual: State.StStart,
-                                  CurrentValue.ValDot: State.StStart,
-                                  CurrentValue.ValSepar: State.StStart,
-                                  CurrentValue.ValOpenCom: State.StStart,
-                                  CurrentValue.ValCloseCom: State.StError,
-                                  CurrentValue.ValQuote: State.StError,
-                                  CurrentValue.ValDollar: State.StError,
-                                  CurrentValue.ValPercent: State.StError,
-                                  CurrentValue.ValAmper: State.StError,
-                                  CurrentValue.ValOctot: State.StError,
-                                  CurrentValue.ValUnknown: State.StError},
-                  
-                  State.StDecimal: {CurrentValue.ValAF: State.StError,
-                                    CurrentValue.ValE: State.StRealWE,
-                                    CurrentValue.ValLetter: State.StError,
-                                    CurrentValue.Val01: State.StDecimal,
-                                    CurrentValue.Val27: State.StDecimal,
-                                    CurrentValue.Val89: State.StDecimal,
-                                    CurrentValue.ValSpace: State.StStart,
-                                    CurrentValue.ValMinus: State.StStart,
-                                    CurrentValue.ValOper: State.StStart,
-                                    CurrentValue.ValCompar: State.StStart,
-                                    CurrentValue.ValEqual: State.StStart,
-                                    CurrentValue.ValDot: State.StRealWDot,
-                                    CurrentValue.ValSepar: State.StStart,
-                                    CurrentValue.ValOpenCom: State.StStart,
-                                    CurrentValue.ValCloseCom: State.StError,
-                                    CurrentValue.ValQuote: State.StError,
-                                    CurrentValue.ValDollar: State.StError,
-                                    CurrentValue.ValPercent: State.StError,
-                                    CurrentValue.ValAmper: State.StError,
-                                    CurrentValue.ValOctot: State.StError,
-                                    CurrentValue.ValUnknown: State.StError},
+                  State.StIdent: {i: State.StStart if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                CharType.CTAF, CharType.CTE, CharType.CTLetter,
+                                                                CharType.CTCloseCom, CharType.CTQuote, CharType.CTDollar,
+                                                                CharType.CTPercent, CharType.CTAmper, CharType.CTOctot,
+                                                                CharType.CTUnknown]
+                                  else State.StError if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                  CharType.CTAF, CharType.CTE, CharType.CTLetter]
+                                  else State.StIdent
+                                  for i in CharType},
 
-                  State.StBinary: {CurrentValue.ValAF: State.StError,
-                                   CurrentValue.ValE: State.StError,
-                                   CurrentValue.ValLetter: State.StError,
-                                   CurrentValue.Val01: State.StBinary,
-                                   CurrentValue.Val27: State.StError,
-                                   CurrentValue.Val89: State.StError,
-                                   CurrentValue.ValSpace: State.StStart,
-                                   CurrentValue.ValMinus: State.StStart,
-                                   CurrentValue.ValOper: State.StStart,
-                                   CurrentValue.ValCompar: State.StStart,
-                                   CurrentValue.ValEqual: State.StStart,
-                                   CurrentValue.ValDot: State.StError,
-                                   CurrentValue.ValSepar: State.StStart,
-                                   CurrentValue.ValOpenCom: State.StStart,
-                                   CurrentValue.ValCloseCom: State.StError,
-                                   CurrentValue.ValQuote: State.StError,
-                                   CurrentValue.ValDollar: State.StError,
-                                   CurrentValue.ValPercent: State.StError,
-                                   CurrentValue.ValAmper: State.StError,
-                                   CurrentValue.ValOctot: State.StError,
-                                   CurrentValue.ValUnknown: State.StError},
+                  State.StDecimal: {i: State.StError if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                  CharType.CTSpace, CharType.CTMinus, CharType.CTOper,
+                                                                  CharType.CTCompar, CharType.CTEqual,
+                                                                  CharType.CTSepar, CharType.CTOpenCom,
+                                                                  CharType.CTDot]
+                                    else State.StStart if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                    CharType.CTDot]
+                                    else State.StDecimal if i != CharType.CTDot
+                                    else State.StRealWDot
+                                    for i in CharType},
 
-                  State.StOctal: {CurrentValue.ValAF: State.StError,
-                                  CurrentValue.ValE: State.StError,
-                                  CurrentValue.ValLetter: State.StError,
-                                  CurrentValue.Val01: State.StOctal,
-                                  CurrentValue.Val27: State.StOctal,
-                                  CurrentValue.Val89: State.StError,
-                                  CurrentValue.ValSpace: State.StStart,
-                                  CurrentValue.ValMinus: State.StStart,
-                                  CurrentValue.ValOper: State.StStart,
-                                  CurrentValue.ValCompar: State.StStart,
-                                  CurrentValue.ValEqual: State.StStart,
-                                  CurrentValue.ValDot: State.StError,
-                                  CurrentValue.ValSepar: State.StStart,
-                                  CurrentValue.ValOpenCom: State.StStart,
-                                  CurrentValue.ValCloseCom: State.StError,
-                                  CurrentValue.ValQuote: State.StError,
-                                  CurrentValue.ValDollar: State.StError,
-                                  CurrentValue.ValPercent: State.StError,
-                                  CurrentValue.ValAmper: State.StError,
-                                  CurrentValue.ValOctot: State.StError,
-                                  CurrentValue.ValUnknown: State.StError},
+                  State.StBinary: {i: State.StError if not i in [CharType.CT01,
+                                                                 CharType.CTSpace, CharType.CTMinus, CharType.CTOper,
+                                                                 CharType.CTCompar, CharType.CTEqual,
+                                                                 CharType.CTSepar, CharType.CTOpenCom]
+                                   else State.StStart if i != CharType.CT01
+                                   else State.StBinary
+                                   for i in CharType},
 
-                  State.StHeximal: {CurrentValue.ValAF: State.StHeximal,
-                                    CurrentValue.ValE: State.StHeximal,
-                                    CurrentValue.ValLetter: State.StError,
-                                    CurrentValue.Val01: State.StHeximal,
-                                    CurrentValue.Val27: State.StHeximal,
-                                    CurrentValue.Val89: State.StHeximal,
-                                    CurrentValue.ValSpace: State.StStart,
-                                    CurrentValue.ValMinus: State.StStart,
-                                    CurrentValue.ValOper: State.StStart,
-                                    CurrentValue.ValCompar: State.StStart,
-                                    CurrentValue.ValEqual: State.StStart,
-                                    CurrentValue.ValDot: State.StError,
-                                    CurrentValue.ValSepar: State.StStart,
-                                    CurrentValue.ValOpenCom: State.StStart,
-                                    CurrentValue.ValCloseCom: State.StError,
-                                    CurrentValue.ValQuote: State.StError,
-                                    CurrentValue.ValDollar: State.StError,
-                                    CurrentValue.ValPercent: State.StError,
-                                    CurrentValue.ValAmper: State.StError,
-                                    CurrentValue.ValOctot: State.StError,
-                                    CurrentValue.ValUnknown: State.StError},
+                  State.StOctal: {i: State.StError if not i in [CharType.CT01, CharType.CT27,
+                                                                CharType.CTSpace, CharType.CTMinus, CharType.CTOper,
+                                                                CharType.CTCompar, CharType.CTEqual,
+                                                                CharType.CTSepar, CharType.CTOpenCom]
+                                  else State.StStart if not i in [CharType.CT01, CharType.CT27]
+                                  else State.StOctal
+                                  for i in CharType},
 
-                  State.StRealWDot: {i: State.StError if i!=CurrentValue.Val01
-                                     and i!=CurrentValue.Val27 and i!=CurrentValue.Val89
-                                     else State.StRealWDec for i in CurrentValue},
+                  State.StHexadecimal: {i: State.StError if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                      CharType.CTAF, CharType.CTE,
+                                                                      CharType.CTSpace, CharType.CTMinus, CharType.CTOper,
+                                                                      CharType.CTCompar, CharType.CTEqual,
+                                                                      CharType.CTSepar, CharType.CTOpenCom]
+                                        else State.StStart if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                      CharType.CTAF, CharType.CTE]
+                                        else State.StHexadecimal
+                                        for i in CharType},
 
-                  State.StRealWDec: {CurrentValue.ValAF: State.StError,
-                                     CurrentValue.ValE: State.StRealWE,
-                                     CurrentValue.ValLetter: State.StError,
-                                     CurrentValue.Val01: State.StRealWDec,
-                                     CurrentValue.Val27: State.StRealWDec,
-                                     CurrentValue.Val89: State.StRealWDec,
-                                     CurrentValue.ValSpace: State.StStart,
-                                     CurrentValue.ValMinus: State.StStart,
-                                     CurrentValue.ValOper: State.StStart,
-                                     CurrentValue.ValCompar: State.StStart,
-                                     CurrentValue.ValEqual: State.StStart,
-                                     CurrentValue.ValDot: State.StError,
-                                     CurrentValue.ValSepar: State.StStart,
-                                     CurrentValue.ValOpenCom: State.StOpenCom,
-                                     CurrentValue.ValCloseCom: State.StError,
-                                     CurrentValue.ValQuote: State.StError,
-                                     CurrentValue.ValDollar: State.StError,
-                                     CurrentValue.ValPercent: State.StError,
-                                     CurrentValue.ValAmper: State.StError,
-                                     CurrentValue.ValOctot: State.StError,
-                                     CurrentValue.ValUnknown: State.StError},
+                  State.StRealWDot: {i: State.StError if not i in [CharType.CT01, CharType.CT27, CharType.CT89]
+                                     else State.StRealWDec
+                                     for i in CharType},
 
-                  State.StRealWE: {CurrentValue.ValAF: State.StError,
-                                   CurrentValue.ValE: State.StError,
-                                   CurrentValue.ValLetter: State.StError,
-                                   CurrentValue.Val01: State.StRealFull,
-                                   CurrentValue.Val27: State.StRealFull,
-                                   CurrentValue.Val89: State.StRealFull,
-                                   CurrentValue.ValSpace: State.StError,
-                                   CurrentValue.ValMinus: State.StRealWEMin,
-                                   CurrentValue.ValOper: State.StError,
-                                   CurrentValue.ValCompar: State.StError,
-                                   CurrentValue.ValEqual: State.StError,
-                                   CurrentValue.ValDot: State.StError,
-                                   CurrentValue.ValSepar: State.StError,
-                                   CurrentValue.ValOpenCom: State.StError,
-                                   CurrentValue.ValCloseCom: State.StError,
-                                   CurrentValue.ValQuote: State.StError,
-                                   CurrentValue.ValDollar: State.StError,
-                                   CurrentValue.ValPercent: State.StError,
-                                   CurrentValue.ValAmper: State.StError,
-                                   CurrentValue.ValOctot: State.StError,
-                                   CurrentValue.ValUnknown: State.StError},
+                  State.StRealWDec: {i: State.StError if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                   CharType.CTSpace, CharType.CTMinus, CharType.CTOper,
+                                                                   CharType.CTCompar, CharType.CTEqual,
+                                                                   CharType.CTSepar, CharType.CTOpenCom,
+                                                                   CharType.CTE]
+                                     else State.StStart if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                     CharType.CTE, CharType.CTOpenCom]
+                                     else State.StRealWDec if not i in [CharType.CTE, CharType.CTOpenCom]
+                                     else State.StRealWE if i != CharType.CTOpenCom
+                                     else State.StOpenCom
+                                     for i in CharType},
 
-                  State.StRealWEMin: {i: State.StError if i!=CurrentValue.Val01
-                                      and i!=CurrentValue.Val27 and i!=CurrentValue.Val89
-                                      else State.StRealFull for i in CurrentValue},
+                  State.StRealWE: {i: State.StError if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                 CharType.CTMinus]
+                                   else State.StRealFull if i != CharType.CTMinus
+                                   else State.StRealWEMin
+                                   for i in CharType},
 
-                  State.StRealFull: {CurrentValue.ValAF: State.StError,
-                                     CurrentValue.ValE: State.StError,
-                                     CurrentValue.ValLetter: State.StError,
-                                     CurrentValue.Val01: State.StRealFull,
-                                     CurrentValue.Val27: State.StRealFull,
-                                     CurrentValue.Val89: State.StRealFull,
-                                     CurrentValue.ValSpace: State.StStart,
-                                     CurrentValue.ValMinus: State.StStart,
-                                     CurrentValue.ValOper: State.StStart,
-                                     CurrentValue.ValCompar: State.StStart,
-                                     CurrentValue.ValEqual: State.StStart,
-                                     CurrentValue.ValDot: State.StError,
-                                     CurrentValue.ValSepar: State.StStart,
-                                     CurrentValue.ValOpenCom: State.StStart,
-                                     CurrentValue.ValCloseCom: State.StError,
-                                     CurrentValue.ValQuote: State.StError,
-                                     CurrentValue.ValDollar: State.StError,
-                                     CurrentValue.ValPercent: State.StError,
-                                     CurrentValue.ValAmper: State.StError,
-                                     CurrentValue.ValOctot: State.StError,
-                                     CurrentValue.ValUnknown: State.StError},
+                  State.StRealWEMin: {i: State.StError if not i in [CharType.CT01, CharType.CT27, CharType.CT89]
+                                      else State.StRealFull
+                                      for i in CharType},
 
-                  State.StOpenChar: {i: State.StOpenString if i!=CurrentValue.ValQuote
-                                     else State.StCloseChar for i in CurrentValue},
+                  State.StRealFull: {i: State.StError if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                   CharType.CTSpace, CharType.CTMinus, CharType.CTOper,
+                                                                   CharType.CTCompar, CharType.CTEqual,
+                                                                   CharType.CTSepar, CharType.CTOpenCom]
+                                     else State.StStart if not i in [CharType.CT01, CharType.CT27, CharType.CT89]
+                                     else State.StRealFull
+                                     for i in CharType},
 
-                  State.StCloseChar: {i: State.StStart if i!=CurrentValue.ValUnknown
-                                      else State.StError for i in CurrentValue},
+                  State.StOpenChar: {i: State.StOpenString if i!=CharType.CTQuote
+                                     else State.StCloseChar
+                                     for i in CharType},
 
-                  State.StOpenString: {i: State.StOpenString if i!=CurrentValue.ValQuote
-                                       else State.StCloseString for i in CurrentValue},
+                  State.StCloseChar: {i: State.StStart if i!=CharType.CTUnknown
+                                      else State.StError
+                                      for i in CharType},
 
-                  State.StCloseString: {i: State.StStart if i!=CurrentValue.ValUnknown
-                                        else State.StError for i in CurrentValue},
+                  State.StOpenString: {i: State.StOpenString if i!=CharType.CTQuote
+                                       else State.StCloseString
+                                       for i in CharType},
 
-                  State.StOper: {i: State.StStart if i!=CurrentValue.ValMinus
-                                 and i!=CurrentValue.ValOper and i!=CurrentValue.ValCompar
-                                 and i!=CurrentValue.ValEqual and i!=CurrentValue.ValDot
-                                 and i!=CurrentValue.ValUnknown else State.StOper
-                                 if i!=CurrentValue.ValUnknown else State.StError
-                                 for i in CurrentValue},
+                  State.StCloseString: {i: State.StStart if i!=CharType.CTUnknown
+                                        else State.StError
+                                        for i in CharType},
 
-                  State.StSepar: {i: State.StStart if i!=CurrentValue.ValUnknown
-                                  else State.StError for i in CurrentValue},
+                  State.StOper: {i: State.StStart if not i in [CharType.CTMinus, CharType.CTOper, CharType.CTCompar,
+                                                               CharType.CTEqual, CharType.CTDot, CharType.CTUnknown]
+                                 else State.StOper if i!=CharType.CTUnknown
+                                 else State.StError
+                                 for i in CharType},
 
-                  State.StAmper: {CurrentValue.ValAF: State.StIdent,
-                                  CurrentValue.ValE: State.StIdent,
-                                  CurrentValue.ValLetter: State.StIdent,
-                                  CurrentValue.Val01: State.StOctal,
-                                  CurrentValue.Val27: State.StOctal,
-                                  CurrentValue.Val89: State.StOctal,
-                                  CurrentValue.ValSpace: State.StError,
-                                  CurrentValue.ValMinus: State.StError,
-                                  CurrentValue.ValOper: State.StError,
-                                  CurrentValue.ValCompar: State.StError,
-                                  CurrentValue.ValEqual: State.StError,
-                                  CurrentValue.ValDot: State.StError,
-                                  CurrentValue.ValSepar: State.StError,
-                                  CurrentValue.ValOpenCom: State.StError,
-                                  CurrentValue.ValCloseCom: State.StError,
-                                  CurrentValue.ValQuote: State.StError,
-                                  CurrentValue.ValDollar: State.StError,
-                                  CurrentValue.ValPercent: State.StError,
-                                  CurrentValue.ValAmper: State.StError,
-                                  CurrentValue.ValOctot: State.StError,
-                                  CurrentValue.ValUnknown: State.StError},
+                  State.StSepar: {i: State.StStart if i!=CharType.CTUnknown
+                                  else State.StError
+                                  for i in CharType},
 
-                  State.StASCII: {CurrentValue.ValAF: State.StError,
-                                  CurrentValue.ValE: State.StError,
-                                  CurrentValue.ValLetter: State.StError,
-                                  CurrentValue.Val01: State.StASCII,
-                                  CurrentValue.Val27: State.StASCII,
-                                  CurrentValue.Val89: State.StASCII,
-                                  CurrentValue.ValSpace: State.StStart,
-                                  CurrentValue.ValMinus: State.StStart,
-                                  CurrentValue.ValOper: State.StStart,
-                                  CurrentValue.ValCompar: State.StStart,
-                                  CurrentValue.ValEqual: State.StStart,
-                                  CurrentValue.ValDot: State.StStart,
-                                  CurrentValue.ValSepar: State.StStart,
-                                  CurrentValue.ValOpenCom: State.StStart,
-                                  CurrentValue.ValCloseCom: State.StError,
-                                  CurrentValue.ValQuote: State.StError,
-                                  CurrentValue.ValDollar: State.StError,
-                                  CurrentValue.ValPercent: State.StError,
-                                  CurrentValue.ValAmper: State.StError,
-                                  CurrentValue.ValOctot: State.StError,
-                                  CurrentValue.ValUnknown: State.StError}
+                  State.StAmper: {i: State.StError if not i in [CharType.CTAF, CharType.CTE, CharType.CTLetter,
+                                                                CharType.CT01, CharType.CT27, CharType.CT89]
+                                  else State.StIdent if not i in [CharType.CT01, CharType.CT27, CharType.CT89]
+                                  else State.StOctal
+                                  for i in CharType},
+
+                  State.StASCII: {i: State.StError if not i in [CharType.CT01, CharType.CT27, CharType.CT89,
+                                                                CharType.CTSpace, CharType.CTMinus, CharType.CTOper,
+                                                                CharType.CTCompar, CharType.CTEqual, CharType.CTDot,
+                                                                CharType.CTSepar, CharType.CTOpenCom]
+                                  else State.StStart if not i in [CharType.CT01, CharType.CT27, CharType.CT89]
+                                  else State.StASCII
+                                  for i in CharType}
                   }
 
 
@@ -480,6 +387,35 @@ class Lexer:
         self.lexemLine = 1;
         self.lexemPosition = 1;
 
+        self.charTypeTurner = {i: CharType.CTAF for i in ['A', 'B', 'C', 'D', 'F', 'a', 'b', 'c', 'd', 'f']}
+        self.charTypeTurner.update([(i, CharType.CTE) for i in ['E','e']])
+        self.charTypeTurner.update([(i, CharType.CTLetter) for i in ['G','H','I','J','K','L','M','N','O','P','Q','R','S',
+                                                                     'T','U','V','W','X','Y','Z','g','h','i','j','k','l',
+                                                                     'm','n','o','p','q','r','s','t','u','v','w','x','y',
+                                                                     'z','А','Б','В','Г','Д','Е','Ё','Ж','З','И','Й','К',
+                                                                     'Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ц','Ч',
+                                                                     'Ш','Щ','Ъ','Ы','Ь','Э','Ю','Я','а','б','в','г','д',
+                                                                     'е','ё','ж','з','и','й','к','л','м','н','о','п','р',
+                                                                     'с','т','у','ф','х','ц','ч','ш','щ','ъ','ы','ь','э',
+                                                                     'ю','я']])
+        self.charTypeTurner.update([(i, CharType.CT01) for i in ['0','1']])
+        self.charTypeTurner.update([(i, CharType.CT27) for i in ['2','3','4','5','6','7']])
+        self.charTypeTurner.update([(i, CharType.CT89) for i in ['8','9']])
+        self.charTypeTurner.update([(i, CharType.CTSpace) for i in [' ', '\n', '\t', '\0', '\r', '']])
+        self.charTypeTurner.update([('-', CharType.CTMinus)])
+        self.charTypeTurner.update([(i, CharType.CTOper) for i in ['+', '*', '/', ':']])
+        self.charTypeTurner.update([(i, CharType.CTCompar) for i in ['<', '>']])
+        self.charTypeTurner.update([('=', CharType.CTEqual)])
+        self.charTypeTurner.update([('.', CharType.CTDot)])
+        self.charTypeTurner.update([(i, CharType.CTSepar) for i in ['(', ')', ';', '[', ']', ',']])
+        self.charTypeTurner.update([('{', CharType.CTOpenCom)])
+        self.charTypeTurner.update([('}', CharType.CTCloseCom)])
+        self.charTypeTurner.update([('\'', CharType.CTQuote)])
+        self.charTypeTurner.update([('$', CharType.CTDollar)])
+        self.charTypeTurner.update([('%', CharType.CTPercent)])
+        self.charTypeTurner.update([('&', CharType.CTAmper)])
+        self.charTypeTurner.update([('#', CharType.CTOctot)])
+
 
     def getNextSymbol(self):
         symbol = self.fin.read(1)
@@ -492,48 +428,10 @@ class Lexer:
     
 
     def getNextValue(self):
-        if self.currentSymbol in ['A', 'B', 'C', 'D', 'F', 'a', 'b', 'c', 'd', 'f']:
-            return CurrentValue.ValAF
-        elif self.currentSymbol in ['E','e']:
-            return CurrentValue.ValE
-        elif self.currentSymbol.isalpha():
-            return CurrentValue.ValLetter
-        elif self.currentSymbol in ['0','1']:
-            return CurrentValue.Val01
-        elif self.currentSymbol in ['2','3','4','5','6','7']:
-            return CurrentValue.Val27
-        elif self.currentSymbol in ['8','9']:
-            return CurrentValue.Val89
-        elif self.currentSymbol in [' ', '\n', '\t', '\0', '\r', '']:
-            return CurrentValue.ValSpace
-        elif self.currentSymbol == '-':
-            return CurrentValue.ValMinus
-        elif self.currentSymbol in ['+', '*', '/', ':']:
-            return CurrentValue.ValOper
-        elif self.currentSymbol in ['<', '>']:
-            return CurrentValue.ValCompar
-        elif self.currentSymbol == '=':
-            return CurrentValue.ValEqual
-        elif self.currentSymbol == '.':
-            return CurrentValue.ValDot
-        elif self.currentSymbol in ['(', ')', ';', '[', ']', ',']:
-            return CurrentValue.ValSepar
-        elif self.currentSymbol == '{':
-            return CurrentValue.ValOpenCom
-        elif self.currentSymbol == '}':
-            return CurrentValue.ValCloseCom
-        elif self.currentSymbol == '\'':
-            return CurrentValue.ValQuote
-        elif self.currentSymbol == '$':
-            return CurrentValue.ValDollar
-        elif self.currentSymbol == '%':
-            return CurrentValue.ValPercent
-        elif self.currentSymbol == '&':
-            return CurrentValue.ValAmper
-        elif self.currentSymbol == '#':
-            return CurrentValue.ValOctot
+        if self.currentSymbol in self.charTypeTurner.keys():
+            return self.charTypeTurner[self.currentSymbol]
         else:
-            return CurrentValue.ValUnknown
+            return CharType.CTUnknown
 
 
     def isError(self):
@@ -541,7 +439,7 @@ class Lexer:
 
 
     def analyze(self):
-        if self.isEndOfFile:
+        if self.isEndOfFile and not self.isErrorCaught:
             self.lexem = self.lexem = Lexem(self.lexemLine, self.lexemPosition, State.StFinal, '')
         else:
             self.lexemIsFound = False

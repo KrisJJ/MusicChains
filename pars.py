@@ -119,97 +119,84 @@ class AssignNode(Node):
         self.rightPart.draw(deep+1,fout)
 
 
+class StatementNode(Node):
+    inner = None
 
-class BlockNode(Node):
-    beginPart = None
-    mainPart = None
-    endPart = None
-
-    def __init__(self,blBegin,blMain,blEnd):
-        self.beginPart = blBegin
-        self.mainPart = blMain
-        self.endPart = blEnd
+    def __init__(self,node):
+        self.inner = node
 
     def draw(self,deep,fout):
-        if deep>0:
-            fout.write('  '*(deep-1)+ '└-' + str(self.beginPart.getValue())+'\n')
-        else:
-            fout.write(str(self.beginPart.getValue())+'\n')
-
-        self.mainPart.draw(deep+1,fout)
-
-        if deep>0:
-            fout.write('  '*(deep)+ '└-' + str(self.endPart.getValue())+'\n')
-        else:
-            fout.write('└-' + str(self.endPart.getValue())+'\n')
+        print(self.inner)
+        self.inner.draw(deep,fout)
 
 
-class WhileNode(Node):
-    whilePart = None
+class BlockNode(StatementNode):
+    inner = None
+
+    def __init__(self,blList):
+        self.inner = blList
+
+    def draw(self,deep,fout):
+        for elem in self.inner:
+            elem.draw(deep,fout)
+
+
+class WhileNode(StatementNode):
     conditionPart = None
-    doPart = None
     mainPart = None
 
-    def __init__(self,wlWhile,wlCond,wlDo,wlMain):
-        self.whilePart = wlWhile
+    def __init__(self,wlCond,wlMain):
         self.conditionPart = wlCond
-        self.doPart = wlDo
         self.mainPart = wlMain
 
     def draw(self,deep,fout):
         if deep>0:
-            fout.write('  '*(deep-1)+ '└-' + str(self.whilePart.getValue())+'\n')
+            fout.write('  '*(deep-1)+ '└-while\n')
         else:
-            fout.write(str(self.whilePart.getValue())+'\n')
+            fout.write('while\n')
 
         self.conditionPart.draw(deep+1,fout)
 
         if deep>0:
-            fout.write('  '*(deep)+ '└-' + str(self.doPart.getValue())+'\n')
+            fout.write('  '*(deep)+ '└-do\n')
         else:
-            fout.write('└-' + str(self.doPart.getValue())+'\n')
+            fout.write('└-do\n')
 
         self.mainPart.draw(deep+2,fout)
 
 
-class UntilNode(Node):
-    doPart = None
+class UntilNode(StatementNode):
     mainPart = None
-    untilPart = None
     conditionPart = None
 
-    def __init__(self,ulDo,ulMain,ulUntil,ulCond):
-        self.doPart = ulDo
+    def __init__(self,ulMain,ulCond):
         self.mainPart = ulMain
-        self.untilPart = ulUntil
         self.conditionPart = ulCond
 
     def draw(self,deep,fout):
         if deep>0:
-            fout.write('  '*(deep-1)+ '└-' + str(self.doPart.getValue())+'\n')
+            fout.write('  '*(deep-1)+ '└-do\n')
         else:
-            fout.write(str(self.doPart.getValue())+'\n')
+            fout.write('do\n')
 
         self.mainPart.draw(deep+1,fout)
 
         if deep>0:
-            fout.write('  '*(deep)+ '└-' + str(self.untilPart.getValue())+'\n')
+            fout.write('  '*(deep)+ '└-until\n')
         else:
-            fout.write('└-' + str(self.untilPart.getValue())+'\n')
+            fout.write('└-until\n')
 
         self.conditionPart.draw(deep+2,fout)
 
 
-class ForNode(Node):
-    forPart = None
+class ForNode(StatementNode):
     identifPart = None
     startPart = None
     coursePart = None
     endPart = None
     mainPart = None
 
-    def __init__(self,frFor,frId,frStart,frCourse,frEnd,frMain):
-        self.forPart = frFor
+    def __init__(self,frId,frStart,frCourse,frEnd,frMain):
         self.identifPart = frId
         self.startPart = frStart
         self.coursePart = frCourse
@@ -218,9 +205,9 @@ class ForNode(Node):
 
     def draw(self,deep,fout):
         if deep>0:
-            fout.write('  '*(deep-1)+ '└-' + str(self.forPart.getValue())+'\n')
+            fout.write('  '*(deep-1)+ '└-for\n')
         else:
-            fout.write(str(self.forPart.getValue())+'\n')
+            fout.write('for\n')
 
         self.identifPart.draw(deep+1,fout)
 
@@ -233,47 +220,46 @@ class ForNode(Node):
 
         self.endPart.draw(deep+2,fout)
 
-        self.mainPart.draw(deep+1,fout)
+        if deep>0:
+            fout.write('  '*(deep)+ '└-do\n')
+        else:
+            fout.write('└-do\n')
+
+        self.mainPart.draw(deep+2,fout)
 
 
-class IfNode(Node):
-    ifPart = None
+class IfNode(StatementNode):
     condPart = None
-    thenPart = None
     mainPart = None
     elsePart = None
-    restPart = None
 
-    def __init__(self,ifIf,ifCond,ifThen,ifMain,ifElse,ifRest):
-        self.ifPart = ifIf
+    def __init__(self,ifCond,ifMain,ifElse):
         self.condPart = ifCond
-        self.thenPart = ifThen
         self.mainPart = ifMain
         self.elsePart = ifElse
-        self.restPart = ifRest
 
     def draw(self,deep,fout):
         if deep>0:
-            fout.write('  '*(deep-1)+ '└-' + str(self.ifPart.getValue())+'\n')
+            fout.write('  '*(deep-1)+ '└-if\n')
         else:
-            fout.write(str(self.ifPart.getValue())+'\n')
+            fout.write('if\n')
 
         self.condPart.draw(deep+1,fout)
 
         if deep>0:
-            fout.write('  '*(deep)+ '└-' + str(self.thenPart.getValue())+'\n')
+            fout.write('  '*(deep)+ '└-then\n')
         else:
-            fout.write('└-' + str(self.thenPart.getValue())+'\n')
+            fout.write('└-then\n')
 
         self.mainPart.draw(deep+2,fout)
 
         if not self.elsePart is None:
             if deep>0:
-                fout.write('  '*(deep)+ '└-' + str(self.elsePart.getValue())+'\n')
+                fout.write('  '*(deep)+ '└-else\n')
             else:
-                fout.write('└-' + str(self.elsePart.getValue())+'\n')
+                fout.write('└-else\n')
 
-            self.restPart.draw(deep+2,fout)
+            self.elsePart.draw(deep+2,fout)
 
 
 class MainNode(Node):
@@ -318,29 +304,25 @@ class ArrayNode(Node):
 class ArrayElemNode(Node):
     leftPart = None
     rightPart = None
-    leftBracket = None
-    rightBracket = None
 
-    def __init__(self,left,brLeft,right,brRight):
+    def __init__(self,left,right):
         self.leftPart = left
         self.rightPart = right
-        self.leftBracket = brLeft
-        self.rightBracket = brRight
 
     def draw(self,deep,fout):
         self.leftPart.draw(deep,fout)
 
         if deep>0:
-            fout.write('  '*(deep)+ '└-' + str(self.leftBracket.getValue())+'\n')
+            fout.write('  '*(deep+1)+ '└-[\n')
         else:
-            fout.write('└-' + str(self.leftBracket.getValue())+'\n')
+            fout.write('  └-]\n')
                 
         self.rightPart.draw(deep+2,fout)
 
         if deep>0:
-            fout.write('  '*(deep)+ '└-' + str(self.rightBracket.getValue())+'\n')
+            fout.write('  '*(deep+1)+ '└-]\n')
         else:
-            fout.write('└-' + str(self.rightBracket.getValue())+'\n')
+            fout.write('  └-]\n')
 
 
 class EmptyNode(Node):
@@ -366,11 +348,7 @@ class Parser:
         lexem = self.lexer.analyze()
         print('Got lexem')
         print(lexem.getValue())
-        while (lexem.getType() != 'Integer' and lexem.getType() != 'Float' and
-               lexem.getType() != 'Identif' and lexem.getType() != 'Operator' and
-               lexem.getType() != 'Separator' and lexem.getType() != 'Final' and
-               lexem.getType() != 'Error' and lexem.getType() != 'Keyword' and
-               lexem.getType() != 'String' and lexem.getType() != 'Char'):
+        while (lexem.getType() == 'Directory'):
             lexem = self.lexer.analyze()
             print(lexem.getValue())
 
@@ -381,13 +359,17 @@ class Parser:
     def parseExpr(self):
         print('PE')
         left = self.parseTerm()
-        oper = self.currentLexem
-        self.isMoved = False
-        while oper.getValue() == '+' or oper.getValue() == '-':
-            right = self.parseTerm()
-            left = BinOperNode(left, oper, right)
+        if not type(left) is ErrorNode and not type(left) is EmptyNode:
             oper = self.currentLexem
             self.isMoved = False
+            while oper.getValue() == '+' or oper.getValue() == '-':
+                right = self.parseTerm()
+                if type(right) is FinalNode:
+                    return ErrorNode(self.currentLexem,'expected second operand')
+                else:
+                    left = BinOperNode(left, oper, right)
+                    oper = self.currentLexem
+                    self.isMoved = False
 
         print('Finished PE')
         return left
@@ -396,14 +378,18 @@ class Parser:
     def parseTerm(self):
         print('PT')
         left = self.parseFactor()
-        oper = self.currentLexem
-        self.isMoved = False
-        while (oper.getValue() == '*' or oper.getValue() == '/' or
-               oper.getValue() == 'div' or oper.getValue() == 'mod'):
-            right = self.parseFactor()
-            left = BinOperNode(left, oper, right)
+        if not type(left) is ErrorNode and not type(left) is EmptyNode:
             oper = self.currentLexem
             self.isMoved = False
+            while (oper.getValue() == '*' or oper.getValue() == '/' or
+                   oper.getValue() == 'div' or oper.getValue() == 'mod'):
+                right = self.parseFactor()
+                if type(right) is FinalNode:
+                    return ErrorNode(self.currentLexem,'expected second operand')
+                else:
+                    left = BinOperNode(left, oper, right)
+                    oper = self.currentLexem
+                    self.isMoved = False
 
         print('Finished PT')
         return left
@@ -485,120 +471,88 @@ class Parser:
         return temperNode
 
 
-    def parseMain(self):
-        print('PM')
-        self.currentLexem = self.getNextLexem()
-        left = EmptyNode()
-        right = EmptyNode()
-        while not (self.isEOF or self.isError or
-                   self.currentLexem.getValue() == 'end' or self.currentLexem.getValue() == 'until' or
-                   self.currentLexem.getValue() == 'else'):
-            print('Cycle')
-            if self.currentLexem.getType() == 'Final':
-                self.isEOF = True
-                right = FinalNode(self.currentLexem)
-                left = MainNode(left,right)
+    def parseStatement(self):
+        print('PS')
+        if not self.isMoved:
+            self.currentLexem = self.getNextLexem()
+        else:
+            self.isMoved = False
 
-            elif self.currentLexem.getType() == 'Error':
-                self.isError = True
-                print('Error unexpected')
-                return ErrorNode(self.currentLexem,'Unexpected lexem')
+        if self.currentLexem.getType() == 'Final':
+            self.isEOF = True
+            return StatementNode(FinalNode(self.currentLexem))
+
+        elif self.currentLexem.getType() == 'Error':
+            self.isError = True
+            print('Error unexpected')
+            return StatementNode(ErrorNode(self.currentLexem,'Unexpected lexem'))
             
-            elif self.currentLexem.getType() == 'Keyword':
-                if self.currentLexem.getValue() == 'begin':
-                    right = self.parseBlock()
-                    left = MainNode(left,right)
-                    break
+        elif self.currentLexem.getType() == 'Keyword':
+            if self.currentLexem.getValue() == 'begin':
+                return StatementNode(self.parseBlock())
                     
-                elif self.currentLexem.getValue() == 'while':
-                    right = self.parseWhile()
-                    left = MainNode(left,right)
+            elif self.currentLexem.getValue() == 'while':
+                return StatementNode(self.parseWhile())
 
-                elif self.currentLexem.getValue() == 'do':
-                    right = self.parseUntil()
-                    left = MainNode(left,right)
+            elif self.currentLexem.getValue() == 'do':
+                return StatementNode(self.parseUntil())
 
-                elif self.currentLexem.getValue() == 'for':
-                    right = self.parseFor()
-                    left = MainNode(left,right)
+            elif self.currentLexem.getValue() == 'for':
+                return StatementNode(self.parseFor())
 
-                elif self.currentLexem.getValue() == 'if':
-                    right = self.parseIf()
-                    left = MainNode(left,right)
+            elif self.currentLexem.getValue() == 'if':
+                return StatementNode(self.parseIf())
 
-                else:
-                    self.isError = True
-                    print('Error bad kw')
-                    return ErrorNode(self.currentLexem,'Bad keyword')
-
-            elif self.currentLexem.getType() == 'Identif':
-                right = self.parseIdentif()
-                left = MainNode(left,right)
+            elif (self.currentLexem.getValue() == 'end' or self.currentLexem.getValue() == 'until' or
+                  self.currentLexem.getValue() == 'else'):
+                return EmptyNode()
 
             else:
-                self.isMoved = True
-                right = self.parseExpr()
-                left = MainNode(left,right)
+                self.isError = True
+                print('Error bad kw')
+                return StatementNode(ErrorNode(self.currentLexem,'Bad keyword'))
 
-            if not (self.isEOF or self.isError or
-                    self.currentLexem.getValue() == 'end' or self.currentLexem.getValue() == 'until' or
-                    self.currentLexem.getValue() == 'else'):
-                print('Not stoper, wait ;')
-                if self.currentLexem.getValue() == ';':
-                    print('founded ;')
-                    self.currentLexem = self.getNextLexem()
-                    if self.currentLexem.getType() == 'Final':
-                        self.isError = True
-                        print('Error ;')
-                        return ErrorNode(self.currentLexem,'Expected "."')
-                    else:
-                        right = EmptyNode()
-                        left = MainNode(left,right)
+        elif self.currentLexem.getType() == 'Identif':
+            return StatementNode(self.parseIdentif())
 
-                elif self.currentLexem.getValue() == '.':
-                    self.currentLexem = self.getNextLexem()
-                    if self.currentLexem.getType() == 'Final':
-                        right = EmptyNode()
-                        left = MainNode(left,right)
-                    else:
-                        self.isError = True
-                        print('Error .')
-                        return ErrorNode(self.currentLexem,'Expected ";"')
-                    
-                elif self.currentLexem.getType() == 'Final':
-                    right = FinalNode(self.currentLexem)
-                    left = MainNode(left,right)
-                    
-                else:
-                    self.isError = True
-                    print('Error ;')
-                    return ErrorNode(self.currentLexem,'Expected ";"')
-
-        print(right)
-        print(left)
-        print('Finished PM')
-        return left
+        else:
+            self.isMoved = True
+            return StatementNode(self.parseExpr())
 
 
     def parseBlock(self):
         print('PB')
-        beginPart = self.currentLexem
-        mainPart = self.parseMain()
-        endPart = self.currentLexem
+        self.currentLexem = self.getNextLexem()
+        self.isMoved = True
+        print('Cycle')
+        blockList = []
+        while not (self.isEOF or self.isError or
+                   self.currentLexem.getValue() == 'end'):
+            blockList.append(self.parseStatement())
+            #self.currentLexem = self.getNextLexem()
+            print('want ; or end')
+            if self.currentLexem.getType() == 'Final':
+                self.isEOF = True
+            elif self.currentLexem.getType() == 'Error':
+                self.isError = True
+            elif self.currentLexem.getValue() == '.':
+                self.currentLexem = self.getNextLexem()
+                if self.currentLexem.getType() == 'Final':
+                    self.isEOF = True
+                else:
+                    self.isError = True
+                    print('Error .')
+                    return ErrorNode(self.currentLexem,'unexpected .')
+            elif not (self.currentLexem.getValue() == 'end' or self.currentLexem.getValue() == ';'):
+                self.isError = True
+                print('cant find ;')
+                return ErrorNode(self.currentLexem,'expected ;')
+            else:
+                self.currentLexem = self.getNextLexem()
+                self.isMoved = True
+        
         print('Finished PB')
-        if endPart.getValue() == 'end':
-            self.currentLexem = self.getNextLexem()
-            #self.isMoved = True
-            return BlockNode(beginPart,mainPart,endPart)
-        elif endPart.getType() == 'Error':
-            self.isErrore = True
-            print('Error error')
-            return ErrorNode(endPart,endPart.getValue())
-        else:
-            self.isErrore = True
-            print('Error end')
-            return ErrorNode(endPart,'Expected "end"')
-
+        return BlockNode(blockList)
 
 
     def parseCondition(self):
@@ -669,70 +623,60 @@ class Parser:
 
     def parseWhile(self):
         print('PW')
-        whilePart = self.currentLexem
         condPart = self.parseCondition()
-        doPart = self.currentLexem
-        if doPart.getValue() != 'do':
+        if self.currentLexem.getValue() != 'do':
             self.isError = True
             print('Error do')
-            return ErrorNode(doPart,'Expected "do"')
-        mainPart = self.parseMain()
+            return ErrorNode(self.currentLexem,'Expected "do"')
+        mainPart = self.parseStatement()
 
         print('Finished PW')
-        return WhileNode(whilePart,condPart,doPart,mainPart)
+        return WhileNode(condPart,mainPart)
 
 
     def parseUntil(self):
         print('PU')
-        doPart = self.currentLexem
-        mainPart = self.parseMain()
-        untilPart = self.currentLexem
-        if untilPart.getValue() != 'until':
+        mainPart = self.parseStatement()
+        if self.currentLexem.getValue() != 'until':
             self.isError = True
             print('Error until')
-            return ErrorNode(untilPart,'Expected "until"')
+            return ErrorNode(self.currentLexem,'Expected "until"')
         conditionPart = self.parseCondition()
 
         print('Finished PU')
-        return UntilNode(doPart,mainPart,untilPart,conditionPart)
+        return UntilNode(mainPart,conditionPart)
 
 
     def parseIf(self):
         print('PI')
-        ifPart = self.currentLexem
         condPart = self.parseCondition()
-        thenPart = self.currentLexem
-        if thenPart.getValue() != 'then':
+        if self.currentLexem.getValue() != 'then':
             self.isError = True
             print('Error then')
-            return ErrorNode(thenPart,'Expected "then"')
-        mainPart = self.parseMain()
-        elsePart = self.currentLexem
-        print('kinda else',elsePart.getValue())
-        if elsePart.getValue() == 'else':
-            restPart = self.parseMain()
+            return ErrorNode(self.currentLexem,'Expected "then"')
+        mainPart = self.parseStatement()
+        print('kinda else',self.currentLexem.getValue())
+        if self.currentLexem.getValue() == 'else':
+            elsePart = self.parseStatement()
         else:
             elsePart = None
-            restPart = None
 
         print('Finished PI')
-        return IfNode(ifPart,condPart,thenPart,mainPart,elsePart,restPart)
+        return IfNode(condPart,mainPart,elsePart)
 
 
     def parseFor(self):
         print('Pfor')
-        forPart = self.currentLexem
         self.currentLexem = self.getNextLexem()
         if self.currentLexem.getType() == 'Identif':
             identifPart = IdentifNode(self.currentLexem)
         else:
             return ErrorNode(self.currentLexem,'Expected Identificator')
         self.currentLexem = self.getNextLexem()
-        comsPart = self.currentLexem
-        if comsPart.getValue() != ':=':
+        if self.currentLexem.getValue() != ':=':
             self.isError = True
             print('Error :')
-            return ErrorNode(comsPart,'Expected ":"') 
+            return ErrorNode(self.currentLexem,'Expected ":"') 
         startPart = self.parseExpr()
         coursePart = self.currentLexem
         if coursePart.getValue() != 'to' and coursePart.getValue() != 'downto':
@@ -740,10 +684,14 @@ class Parser:
             print('Error to')
             return ErrorNode(coursePart,'Expected "to"')
         endPart = self.parseExpr()
-        mainPart = self.parseMain()
+        if self.currentLexem.getValue() != 'do':
+            self.isError = True
+            print('Error do')
+            return ErrorNode(self.currentLexem,'Expected "do"')
+        mainPart = self.parseStatement()
 
         print('Finished Pfor')
-        return ForNode(forPart,identifPart,startPart,coursePart,endPart,mainPart)
+        return ForNode(identifPart,startPart,coursePart,endPart,mainPart)
 
 
     def parseIdentif(self):
@@ -767,11 +715,9 @@ class Parser:
             left = AssignNode(left,oper,right)
 
         elif self.currentLexem.getValue() == '[':
-            brLeft = self.currentLexem
             right = self.parseExpr()
             if self.currentLexem.getValue() == ']':
-                brRight = self.currentLexem
-                left = ArrayElemNode(left,brLeft,right,brRight)
+                left = ArrayElemNode(left,right)
                 self.currentLexem = self.getNextLexem()
                 self.isMoved = True
                 right = self.parseIdentif()
@@ -797,9 +743,6 @@ class Parser:
 
     def parseArray(self):
         print('PA')
-        '''left = self.parseExpr()
-        oper = self.currentLexem
-        self.isMoved = False'''
         left = EmptyNode()
         self.currentLexem = self.getNextLexem()
         self.isMoved = True
@@ -813,7 +756,6 @@ class Parser:
         while oper.getValue() == ',':
             right = self.parseExpr()
             left = ArrayNode(left,right)
-            '''self.currentLexem = self.getNextLexem()'''
             oper = self.currentLexem
             self.isMoved = False
 
@@ -829,7 +771,7 @@ class Parser:
         
 
     def analyze(self):
-        if not self.currentLexem is None:
-            self.isMoved = True
-        return self.parseMain()
+        #if not self.currentLexem is None:
+            #self.isMoved = True
+        return self.parseStatement()
             

@@ -1,0 +1,5 @@
+1	1	String	'eng'	'eng'
+3	1	String	'@#$%^&!'	'@#$%^&!'
+4	1	String	'one'	'one'
+4	6	Operator	+	+
+4	7	String	'two'	'two'

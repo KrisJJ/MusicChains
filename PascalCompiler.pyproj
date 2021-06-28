@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{f680a6be-4535-4e4e-b5e0-4e65b690b5d4}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>main.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>Global|PythonCore|3.7-32</InterpreterId>
+    <IsWindowsApplication>False</IsWindowsApplication>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="input.txt" />
+    <Content Include="lex_test\answers\res_binary1.txt" />
+    <Content Include="lex_test\answers\res_binary2.txt" />
+    <Content Include="lex_test\answers\res_binary3.txt" />
+    <Content Include="lex_test\answers\res_binopers1.txt" />
+    <Content Include="lex_test\answers\res_binopers2.txt" />
+    <Content Include="lex_test\answers\res_binopers3.txt" />
+    <Content Include="lex_test\answers\res_char1.txt" />
+    <Content Include="lex_test\answers\res_char2.txt" />
+    <Content Include="lex_test\answers\res_decimal1.txt" />
+    <Content Include="lex_test\answers\res_decimal2.txt" />
+    <Content Include="lex_test\answers\res_decimal3.txt" />
+    <Content Include="lex_test\answers\res_float1.txt" />
+    <Content Include="lex_test\answers\res_float2.txt" />
+    <Content Include="lex_test\answers\res_float3.txt" />
+    <Content Include="lex_test\answers\res_float4.txt" />
+    <Content Include="lex_test\answers\res_float5.txt" />
+    <Content Include="lex_test\answers\res_float6.txt" />
+    <Content Include="lex_test\answers\res_float7.txt" />
+    <Content Include="lex_test\answers\res_float8.txt" />
+    <Content Include="lex_test\answers\res_hexadecimal1.txt" />
+    <Content Include="lex_test\answers\res_hexadecimal2.txt" />
+    <Content Include="lex_test\answers\res_hexadecimal3.txt" />
+    <Content Include="lex_test\answers\res_hexadecimal4.txt" />
+    <Content Include="lex_test\answers\res_keywords1.txt" />
+    <Content Include="lex_test\answers\res_octal1.txt" />
+    <Content Include="lex_test\answers\res_octal2.txt" />
+    <Content Include="lex_test\answers\res_octal3.txt" />
+    <Content Include="lex_test\answers\res_space1.txt" />
+    <Content Include="lex_test\answers\res_string1.txt" />
+    <Content Include="lex_test\answers\res_string2.txt" />
+    <Content Include="lex_test\questions\test_binary1.txt" />
+    <Content Include="lex_test\questions\test_binary2.txt" />
+    <Content Include="lex_test\questions\test_binary3.txt" />
+    <Content Include="lex_test\questions\test_binopers1.txt" />
+    <Content Include="lex_test\questions\test_binopers2.txt" />
+    <Content Include="lex_test\questions\test_binopers3.txt" />
+    <Content Include="lex_test\questions\test_char1.txt" />
+    <Content Include="lex_test\questions\test_char2.txt" />
+    <Content Include="lex_test\questions\test_decimal1.txt" />
+    <Content Include="lex_test\questions\test_decimal2.txt" />
+    <Content Include="lex_test\questions\test_decimal3.txt" />
+    <Content Include="lex_test\questions\test_float1.txt" />
+    <Content Include="lex_test\questions\test_float2.txt" />
+    <Content Include="lex_test\questions\test_float3.txt" />
+    <Content Include="lex_test\questions\test_float4.txt" />
+    <Content Include="lex_test\questions\test_float5.txt" />
+    <Content Include="lex_test\questions\test_float6.txt" />
+    <Content Include="lex_test\questions\test_float7.txt" />
+    <Content Include="lex_test\questions\test_float8.txt" />
+    <Content Include="lex_test\questions\test_hexadecimal1.txt" />
+    <Content Include="lex_test\questions\test_hexadecimal2.txt" />
+    <Content Include="lex_test\questions\test_hexadecimal3.txt" />
+    <Content Include="lex_test\questions\test_hexadecimal4.txt" />
+    <Content Include="lex_test\questions\test_keywords1.txt" />
+    <Content Include="lex_test\questions\test_octal1.txt" />
+    <Content Include="lex_test\questions\test_octal2.txt" />
+    <Content Include="lex_test\questions\test_octal3.txt" />
+    <Content Include="lex_test\questions\test_space1.txt" />
+    <Content Include="lex_test\questions\test_string1.txt" />
+    <Content Include="lex_test\questions\test_string2.txt" />
+    <Content Include="output.txt" />
+    <Content Include="pars_test\answers\res_arel1.txt" />
+    <Content Include="pars_test\answers\res_block1.txt" />
+    <Content Include="pars_test\answers\res_block2.txt" />
+    <Content Include="pars_test\answers\res_block3.txt" />
+    <Content Include="pars_test\answers\res_block4.txt" />
+    <Content Include="pars_test\answers\res_block5.txt" />
+    <Content Include="pars_test\answers\res_for1.txt" />
+    <Content Include="pars_test\answers\res_funk1.txt" />
+    <Content Include="pars_test\answers\res_if1.txt" />
+    <Content Include="pars_test\answers\res_method1.txt" />
+    <Content Include="pars_test\answers\res_oper1.txt" />
+    <Content Include="pars_test\answers\res_oper10.txt" />
+    <Content Include="pars_test\answers\res_oper11.txt" />
+    <Content Include="pars_test\answers\res_oper12.txt" />
+    <Content Include="pars_test\answers\res_oper2.txt" />
+    <Content Include="pars_test\answers\res_oper3.txt" />
+    <Content Include="pars_test\answers\res_oper4.txt" />
+    <Content Include="pars_test\answers\res_oper5.txt" />
+    <Content Include="pars_test\answers\res_oper6.txt" />
+    <Content Include="pars_test\answers\res_oper7.txt" />
+    <Content Include="pars_test\answers\res_oper8.txt" />
+    <Content Include="pars_test\answers\res_oper9.txt" />
+    <Content Include="pars_test\answers\res_until1.txt" />
+    <Content Include="pars_test\answers\res_while1.txt" />
+    <Content Include="pars_test\questions\test_arel1.txt" />
+    <Content Include="pars_test\questions\test_block1.txt" />
+    <Content Include="pars_test\questions\test_block2.txt" />
+    <Content Include="pars_test\questions\test_block3.txt" />
+    <Content Include="pars_test\questions\test_block4.txt" />
+    <Content Include="pars_test\questions\test_block5.txt" />
+    <Content Include="pars_test\questions\test_for1.txt" />
+    <Content Include="pars_test\questions\test_funk1.txt" />
+    <Content Include="pars_test\questions\test_if1.txt" />
+    <Content Include="pars_test\questions\test_method1.txt" />
+    <Content Include="pars_test\questions\test_oper1.txt" />
+    <Content Include="pars_test\questions\test_oper10.txt" />
+    <Content Include="pars_test\questions\test_oper11.txt" />
+    <Content Include="pars_test\questions\test_oper12.txt" />
+    <Content Include="pars_test\questions\test_oper2.txt" />
+    <Content Include="pars_test\questions\test_oper3.txt" />
+    <Content Include="pars_test\questions\test_oper4.txt" />
+    <Content Include="pars_test\questions\test_oper5.txt" />
+    <Content Include="pars_test\questions\test_oper6.txt" />
+    <Content Include="pars_test\questions\test_oper7.txt" />
+    <Content Include="pars_test\questions\test_oper8.txt" />
+    <Content Include="pars_test\questions\test_oper9.txt" />
+    <Content Include="pars_test\questions\test_until1.txt" />
+    <Content Include="pars_test\questions\test_while1.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="lexer.py" />
+    <Compile Include="main.py" />
+    <Compile Include="pars.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="lex_test\" />
+    <Folder Include="lex_test\answers" />
+    <Folder Include="lex_test\questions" />
+    <Folder Include="pars_test\" />
+    <Folder Include="pars_test\answers" />
+    <Folder Include="pars_test\questions" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.7-32" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

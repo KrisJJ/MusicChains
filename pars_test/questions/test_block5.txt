@@ -1,0 +1,6 @@
+begin
+	1+2;
+end;
+begin
+	3+4;
+end;

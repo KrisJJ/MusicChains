@@ -1,0 +1,10 @@
+var
+begin
+end
+if
+then
+else
+do
+until
+while
+for

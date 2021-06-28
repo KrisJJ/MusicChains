@@ -43,18 +43,28 @@ def parseTest():
         fout.close()
         print('done')
          
-        aFin = open(aFiles[i], 'r', encoding='utf-8')       
-        aText = aFin.read()
+        aFin = open(aFiles[i], 'r', encoding='utf-8')
         fout = open(outFile, 'r', encoding='utf-8')
-        text = fout.read()
-        if aText != text:
-            conformFlag = False
+        cutter = True
+        for line in fout:
+            aLine = aFin.readline()
+            lineStrip = line.strip()
+            aLineStrip = aLine.strip()
+            if cutter:
+                cutter = False
+                aLineStrip = aLineStrip[1:]
+            print(len(lineStrip),len(aLineStrip))
+            if lineStrip != aLineStrip:
+                conformFlag = False
+
             
         if conformFlag:
             total += 1
+            mark = "OK"
+        else:
+            mark = "FAIL"
             
-        print(aText)
-        print(text)
+        print(aFin.name, mark)
         
     print(f"{total} tests from {len(qFiles)} are cleared.")  
 
@@ -66,11 +76,15 @@ def lexAnalysis():
     fout = open(f1, 'w', encoding='utf-8')
     lexer = Lexer(fin)
     isEOF = False
+    isError = False
 
-    while not isEOF and not lexer.isError():
+    while not isEOF and not isError:
         lex = lexer.analyze()
-        fout.write(lex.getString()+'\n')
-        if lex.getType() == 'Final':
+        if lex.getType() != 'Final':
+            fout.write(lex.getString()+'\n')
+        if lex.getType() == 'Error':
+            isError = True
+        elif lex.getType() == 'Final':
             isEOF = True
 
     fin.close()
@@ -89,25 +103,34 @@ def lexTest():
         aFin = open(aFiles[i], 'r', encoding='utf-8')
         lexer = Lexer(qFin)
         isEOF = False
+        isError = False
         allMadeLex = ''
         allReadLex = ''
-        while not isEOF and not lexer.isError() and conformFlag:
+        while not isEOF and not isError and conformFlag:
             lex = lexer.analyze()
-            if lex.getType() == 'Final':
+            if lex.getType() == 'Error':
+                isError = True
+            elif lex.getType() == 'Final':
                 isEOF = True
-            madeLex = lex.getString()+'\n'
-            readLex = aFin.readline()
-            if madeLex != readLex:
-                conformFlag = False
-            allMadeLex += madeLex
-            allReadLex += readLex
-            #print(madeLex)
-            #print(readLex)
+
+            if lex.getType() != 'Final':
+                madeLex = lex.getString()+'\n'
+                readLex = aFin.readline()
+                if madeLex.strip() != readLex.strip():
+                    conformFlag = False
+                allMadeLex += madeLex
+                allReadLex += readLex
+                print(madeLex,readLex)
             
         if conformFlag:
             total += 1
+            mark = "OK"
+        else:
+            mark = "FAIL"
             
-        print(len(allMadeLex), len(allReadLex))
+        print(aFin.name)
+        print(len(allMadeLex), len(allReadLex), mark)
+        print()
 
         aFin.close()
         qFin.close()
@@ -118,8 +141,8 @@ def lexTest():
 def main():
     #lexAnalysis()
     #lexTest()
-    parseAnalysis()
-    #parseTest()
+    #parseAnalysis()
+    parseTest()
 
 
 if __name__ == '__main__':

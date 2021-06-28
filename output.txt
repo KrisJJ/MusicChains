@@ -1,35 +1,10 @@
-begin
-└-readln
-  └-s1
-└-s2
-  └-:=
-  └-''
-└-for
-  └-i
-  └-downto
-    └-length
-      └-s1
-    └-1
-  └-begin
-    └-s2
-      └-:=
-      └-+
-        └-s2
-        └-s1
-          └-[
-            └-i
-          └-]
-    └-end
-└-if
-  └-=
-    └-s1
-    └-s2
-  └-then
-    └-writeln
-      └-s1
-      └-' - yes'
-  └-else
-    └-writeln
-      └-s1
-      └-' - no'
-└-end
+while
+└->
+  └-a
+  └-5
+└-do
+  └-a
+    └-:=
+    └--
+      └-a
+      └-1
