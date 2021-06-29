@@ -2,6 +2,17 @@ from lexer import Lexer
 from pars import Parser
 import os
 
+def analyze(key):
+    if key=='1':
+        parseAnalysis()
+    elif key=='2':
+        parseTest()
+    elif key=='3':
+        lexAnalysis()
+    elif key=='4':
+        lexTest()
+
+
 def parseAnalysis():
     f = '.\\input.txt'
     f1 = '.\\output.txt'
@@ -139,10 +150,12 @@ def lexTest():
             
 
 def main():
-    #lexAnalysis()
-    #lexTest()
-    #parseAnalysis()
-    parseTest()
+    key = input()
+    while not key in ['1','2','3','4']:
+        print('Unknown key')
+        key = input()
+
+    analyze(key)
 
 
 if __name__ == '__main__':

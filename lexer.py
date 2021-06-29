@@ -144,7 +144,7 @@ class Lexem:
 
         elif state is State.StASCII:
             tempervalue = int(bufferedString[1:])
-            if tempervalue>127 or tempervalue<0:
+            if False: #tempervalue>127 or tempervalue<0:
                 self.lexemType = 'Error'
                 self.lexemValue = 'unable to get ASCII symbol from utf-8 code'
             else:

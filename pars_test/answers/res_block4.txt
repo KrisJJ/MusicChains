@@ -1,1 +1,1 @@
-﻿Error: expected ; on line 3 position 2
+﻿Error: expected "end" on line 3 position 2
