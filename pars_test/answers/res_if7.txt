@@ -1,0 +1,10 @@
+﻿if
+└-or: boolean
+  └-b: boolean
+  └-b1: boolean
+└-then
+  └-a: integer
+    └-:=
+      └-mod: integer
+        └-a: integer
+        └-2

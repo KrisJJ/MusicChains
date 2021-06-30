@@ -1,0 +1,8 @@
+var
+a: integer;
+b: boolean;
+
+begin
+	if b and (a>5) then
+	a:=a+1;
+end.

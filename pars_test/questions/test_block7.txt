@@ -1,0 +1,7 @@
+var
+a: integer;
+
+begin
+var b: integer;
+b:=1+a;
+end.

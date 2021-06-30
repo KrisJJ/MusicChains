@@ -1,0 +1,8 @@
+var
+a: integer;
+b: boolean;
+
+begin
+	if b then
+	a:=a+1;
+end.

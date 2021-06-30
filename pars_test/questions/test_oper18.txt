@@ -1,0 +1,6 @@
+var
+a: integer;
+
+begin
+1+a;
+end.

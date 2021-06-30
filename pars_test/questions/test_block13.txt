@@ -1,0 +1,9 @@
+var
+a: integer;
+
+begin
+var
+a: string;
+b: string;
+b:=1+a;
+end.

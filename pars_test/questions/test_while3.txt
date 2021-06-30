@@ -1,0 +1,7 @@
+var
+a: integer;
+
+begin
+	while a>5 
+	a:=a-1;
+end.

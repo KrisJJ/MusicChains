@@ -35,10 +35,16 @@ class ErrorNode(Node):
 
     def draw(self,deep,fout):
         fout.write(f'Error: {self.message} on {self.lexem.getPosition()}')
-    
+
+    def getMessage(self):
+        return self.message   
+
+    def gelValue(self):
+        return self.lexem
 
 class IntegerNode(Node):
     lexem = None
+    idType = 'integer'
     
     def __init__(self,inputLexem):
         self.lexem = inputLexem
@@ -48,10 +54,14 @@ class IntegerNode(Node):
             fout.write('  '*(deep-1)+ '└-' + str(self.lexem.getValue())+'\n')
         else:
             fout.write(str(self.lexem.getValue())+'\n')
+
+    def getType(self):
+        return self.idType
 
 
 class FloatNode(Node):
     lexem = None
+    idType = 'float'
     
     def __init__(self,inputLexem):
         self.lexem = inputLexem
@@ -61,10 +71,14 @@ class FloatNode(Node):
             fout.write('  '*(deep-1)+ '└-' + str(self.lexem.getValue())+'\n')
         else:
             fout.write(str(self.lexem.getValue())+'\n')
+
+    def getType(self):
+        return self.idType
 
 
 class StringNode(Node):
     lexem = None
+    idType = 'string'
     
     def __init__(self,inputLexem):
         self.lexem = inputLexem
@@ -74,10 +88,14 @@ class StringNode(Node):
             fout.write('  '*(deep-1)+ '└-' + str(self.lexem.getValue())+'\n')
         else:
             fout.write(str(self.lexem.getValue())+'\n')
+
+    def getType(self):
+        return self.idType
 
 
 class CharNode(Node):
     lexem = None
+    idType = 'char'
     
     def __init__(self,inputLexem):
         self.lexem = inputLexem
@@ -87,39 +105,69 @@ class CharNode(Node):
             fout.write('  '*(deep-1)+ '└-' + str(self.lexem.getValue())+'\n')
         else:
             fout.write(str(self.lexem.getValue())+'\n')
+
+    def getType(self):
+        return self.idType
+
+
+class BooleanNode(Node):
+    lexem = None
+    idType = 'boolean'
+    
+    def __init__(self,inputLexem):
+        self.lexem = inputLexem
+
+    def draw(self,deep,fout):
+        if deep>0:
+            fout.write('  '*(deep-1)+ '└-' + str(self.lexem.getValue())+'\n')
+        else:
+            fout.write(str(self.lexem.getValue())+'\n')
+
+    def getType(self):
+        return self.idType
 
 
 class IdentifNode(Node):
     lexem = None
+    idType = None
     
-    def __init__(self,inputLexem):
+    def __init__(self,inputLexem,inputType):
         self.lexem = inputLexem
+        self.idType = inputType
 
     def draw(self,deep,fout):
         if deep>0:
-            fout.write('  '*(deep-1)+ '└-' + str(self.lexem.getValue())+'\n')
+            fout.write('  '*(deep-1)+ f'└-' + str(self.lexem.getValue()) + ': ' + self.idType + '\n')
         else:
-            fout.write(str(self.lexem.getValue())+'\n')
+            fout.write(str(self.lexem.getValue()) + ': ' + self.idType + '\n')
+
+    def getType(self):
+        return self.idType
 
 
 class BinOperNode(Node):
     leftPart = None
     operPart = None
     rightPart = None
+    idType = None
     
-    def __init__(self,binLeft,binOper,binRight):
+    def __init__(self,binLeft,binOper,binRight,idType):
         self.leftPart = binLeft
         self.operPart = binOper
         self.rightPart = binRight
+        self.idType = idType
         
 
     def draw(self,deep,fout):
         if deep>0:
-            fout.write('  '*(deep-1)+ '└-' + str(self.operPart.getValue())+'\n')
+            fout.write('  '*(deep-1)+ '└-' + str(self.operPart.getValue()) + ': ' + self.idType + '\n')
         else:
-            fout.write(str(self.operPart.getValue())+'\n')
+            fout.write(str(self.operPart.getValue()) + ': ' + self.idType + '\n')
         self.leftPart.draw(deep+1,fout)
         self.rightPart.draw(deep+1,fout)
+
+    def getType(self):
+        return self.idType
 
 
 class AssignNode(Node):
@@ -363,6 +411,30 @@ class EmptyNode(Node):
     def draw(self,deep,fout):
         pass
 
+
+class SymbolStack:
+    def __init__(self):
+        self.stack = []
+
+    def add(self,table):
+        self.stack.append(table)
+
+    def find(self,var):
+        i = len(self.stack) - 1
+        if i == -1:
+            return '-1'
+        while not var in self.stack[i].keys() and i>=0:
+            i -= 1
+
+        if i == -1:
+            return '-1'
+        else:
+            return self.stack[i][var]
+
+    def remove(self):
+        self.stack = self.stack[:-1]
+
+
         
 """~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~main body~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
 
@@ -375,7 +447,55 @@ class Parser:
         self.isMoved = False
         self.currentLexem = None
         self.parentes = 0
+        self.isSymbolTableCreated = False
         
+
+    def getVars(self):
+        self.currentLexem = self.getNextLexem()
+        symbolTable = {}
+        if self.currentLexem.getValue() == 'var':
+            self.currentLexem = self.getNextLexem()
+            while self.currentLexem.getValue() != 'begin' and self.currentLexem.getType() != 'Final':
+                vars = [self.currentLexem.getValue()]
+                self.currentLexem = self.getNextLexem()
+
+                while self.currentLexem.getValue() == ',':
+                    self.currentLexem = self.getNextLexem()
+                    if self.currentLexem.getType() != 'Identif':
+                        self.isError = True
+                        print('Error id')
+                        return ErrorNode(self.currentLexem,'Expected Identifier')
+                    else:
+                        vars.append(self.currentLexem.getValue())
+                    self.currentLexem = self.getNextLexem()
+
+                if self.currentLexem.getValue() != ':':
+                    self.isError = True
+                    print('Error :')
+                    return ErrorNode(self.currentLexem,'Expected ":"')
+                else:
+                    self.currentLexem = self.getNextLexem()
+                    if not self.currentLexem.getValue() in ['integer','float','char','string','array','boolean']:
+                        self.isError = True
+                        print('Unknown type')
+                        return ErrorNode(self.currentLexem,'Unknown type')
+                    else:
+                        symbolTable.update([(elem,self.currentLexem.getValue()) for elem in vars])
+                        vars.clear()
+                        self.currentLexem = self.getNextLexem()
+                        if self.currentLexem.getValue() != ';':
+                            self.isError = True
+                            print('Error ;')
+                            return ErrorNode(self.currentLexem,'Expected ";"')
+                        else:
+                            self.currentLexem = self.getNextLexem()
+
+            self.symbolStack.add(symbolTable)
+
+        self.isMoved = True
+
+        return EmptyNode()
+
 
     def getNextLexem(self):
         print('NL')
@@ -401,7 +521,51 @@ class Parser:
                 if type(right) is FinalNode:
                     return ErrorNode(self.currentLexem,'expected second operand')
                 else:
-                    left = BinOperNode(left, oper, right)
+                    if oper.getValue() == '+':
+                        if left.getType() in ['integer','float'] or right.getType() in ['integer','float']:
+                            if left.getType() in ['string','char'] or right.getType() in ['string','char']:
+                                typeB = 'string'
+                            elif left.getType() == right.getType():
+                                typeB = left.getType()
+                            elif left.getType() in ['integer','float'] and right.getType() in ['integer','float']:
+                                typeB = 'float'
+                            else:
+                                self.isError = True
+                                print('Error types in expr')
+                                return ErrorNode(self.currentLexem,f'Unable to transform {right.getType()} to {left.getType()}')
+                        elif left.getType() in ['string','char'] and right.getType() in ['string','char']:
+                            typeB = 'string'
+                        elif left.getType() == right.getType():
+                            typeB = left.getType()
+                        else:
+                            self.isError = True
+                            print('Error types in expr')
+                            return ErrorNode(self.currentLexem,f'Unable to transform {right.getType()} to {left.getType()}')
+
+                    elif oper.getValue() == '-':
+                        if left.getType() in ['integer','float'] or right.getType() in ['integer','float']:
+                            if left.getType() == right.getType():
+                                typeB = left.getType()
+                            elif left.getType() in ['integer','float'] and right.getType() in ['integer','float']:
+                                typeB = 'float'
+                            else:
+                                self.isError = True
+                                print('Error types in expr')
+                                return ErrorNode(self.currentLexem,f'Unable to transform {right.getType()} to {left.getType()}')
+                        else:
+                            self.isError = True
+                            print('Error types in expr')
+                            return ErrorNode(self.currentLexem,f'Unable to transform {right.getType()} to {left.getType()}')
+
+                    elif (oper.getValue() == 'or' and ((left.getType() == 'integer' and right.getType() == 'integer') or
+                                                       (left.getType() == 'boolean' and right.getType() == 'boolean'))):
+                        typeB = left.getType()
+
+                    else:
+                        self.isError = True
+                        print('Error types in expr')
+                        return ErrorNode(self.currentLexem,f'Unable to transform {right.getType()} to {left.getType()}')
+                    left = BinOperNode(left, oper, right,typeB)
                     oper = self.currentLexem
                     self.isMoved = False
 
@@ -420,8 +584,35 @@ class Parser:
                 right = self.parseFactor()
                 if type(right) is FinalNode:
                     return ErrorNode(self.currentLexem,'expected second operand')
+                elif type(right) is ErrorNode:
+                    return ErrorNode(right.gelValue(),right.getMessage())
                 else:
-                    left = BinOperNode(left, oper, right)
+                    if oper.getValue() == '*':
+                        if left.getType() == 'float' and right.getType() == 'float':
+                            typeB = 'float'
+                        elif left.getType() == 'integer' or right.getType() == 'integer':
+                            if left.getType() == 'integer':
+                                typeB = right.getType()
+                            else:
+                                typeB = left.getType()
+                        else:
+                            self.isError = True
+                            print('Error types in term')
+                            return ErrorNode(self.currentLexem,f'Unable to multiplicate {right.getType()} and {left.getType()}')
+                    elif (oper.getValue() == '/' and left.getType() in ['integer','float'] and
+                         right.getType() in ['integer','float']):
+                        typeB = 'float'
+                    elif ((oper.getValue() == 'div' or oper.getValue() == 'mod') and left.getType() == 'integer' and
+                         right.getType() == 'integer'):
+                        typeB = 'integer'
+                    elif (oper.getValue() == 'and' and ((left.getType() == 'integer' and right.getType() == 'integer') or
+                                                       (left.getType() == 'boolean' and right.getType() == 'boolean'))):
+                        typeB = left.getType()
+                    else:
+                        self.isError = True
+                        print('Error types in expr')
+                        return ErrorNode(self.currentLexem,f'Unable to transform {right.getType()} to {left.getType()}')
+                    left = BinOperNode(left, oper, right, typeB)
                     oper = self.currentLexem
                     self.isMoved = False
 
@@ -459,11 +650,16 @@ class Parser:
             temperNode = CharNode(self.currentLexem)
             self.currentLexem = self.getNextLexem()
             self.isMoved = True
+
+        elif self.currentLexem.getType() == 'Boolean':
+            temperNode = BooleanNode(self.currentLexem)
+            self.currentLexem = self.getNextLexem()
+            self.isMoved = True
             
         elif self.currentLexem.getValue() == '(':
             print('found (')
             self.parentes += 1
-            exp = self.parseExpr()
+            exp = self.parseCondition()
             if self.currentLexem.getValue() == ')':
                 self.parentes -= 1
                 self.currentLexem = self.getNextLexem()
@@ -511,30 +707,32 @@ class Parser:
         else:
             self.isMoved = False
 
+        st = EmptyNode()
+
         if self.currentLexem.getType() == 'Final':
             self.isEOF = True
-            return StatementNode(FinalNode(self.currentLexem))
+            return FinalNode(self.currentLexem)
 
         elif self.currentLexem.getType() == 'Error':
             self.isError = True
             print('Error unexpected')
-            return StatementNode(ErrorNode(self.currentLexem,'Unexpected lexem'))
+            return ErrorNode(self.currentLexem,'Unexpected lexem')
             
         elif self.currentLexem.getType() == 'Keyword':
             if self.currentLexem.getValue() == 'begin':
-                return StatementNode(self.parseBlock())
+                st = self.parseBlock()
                     
             elif self.currentLexem.getValue() == 'while':
-                return StatementNode(self.parseWhile())
+                st = self.parseWhile()
 
             elif self.currentLexem.getValue() == 'repeat':
-                return StatementNode(self.parseUntil())
+                st = self.parseUntil()
 
             elif self.currentLexem.getValue() == 'for':
-                return StatementNode(self.parseFor())
+                st = self.parseFor()
 
             elif self.currentLexem.getValue() == 'if':
-                return StatementNode(self.parseIf())
+                st = self.parseIf()
 
             elif (self.currentLexem.getValue() == 'end' or self.currentLexem.getValue() == 'until' or
                   self.currentLexem.getValue() == 'else'):
@@ -543,21 +741,29 @@ class Parser:
             else:
                 self.isError = True
                 print('Error bad kw')
-                return StatementNode(ErrorNode(self.currentLexem,'Bad keyword'))
+                ErrorNode(self.currentLexem,'Bad keyword')
 
         elif self.currentLexem.getType() == 'Identif':
-            return StatementNode(self.parseIdentif())
+            st = self.parseIdentif()
 
         else:
             self.isMoved = True
-            return StatementNode(self.parseExpr())
+            st = self.parseExpr()
+
+        if type(st) is ErrorNode:
+            return ErrorNode(st.gelValue(),st.getMessage())
+        else:
+            return StatementNode(st)
 
 
     def parseStatementSeq(self):
         print('Pss')
         print('Cycle')
         blockList = []
-        blockList.append(self.parseStatement())
+        stat = self.parseStatement()
+        if type(stat) is ErrorNode:
+            return ErrorNode(stat.gelValue(),stat.getMessage())
+        blockList.append(stat)
         self.isMoved = False
         while self.currentLexem.getValue() == ';':
             blockList.append(self.parseStatement())
@@ -569,14 +775,66 @@ class Parser:
     def parseBlock(self):
         print('PB')
         self.currentLexem = self.getNextLexem()
+        symbolTable = {}
+        isVarSet = False
+        while self.currentLexem.getValue() == 'var':
+            isVarSet = True
+            self.currentLexem = self.getNextLexem()
+            if self.currentLexem.getType() != 'Identif':
+                self.isError = True
+                print('Error id')
+                return ErrorNode(self.currentLexem,'Expected Identifier')
+            else:
+                vars = [self.currentLexem.getValue()]
+                self.currentLexem = self.getNextLexem()
+                while self.currentLexem.getValue() == ',':
+                    self.currentLexem = self.getNextLexem()
+                    if self.currentLexem.getType() != 'Identif':
+                        self.isError = True
+                        print('Error id')
+                        return ErrorNode(self.currentLexem,'Expected Identifier')
+                    else:
+                        vars.append(self.currentLexem.getValue())
+                    self.currentLexem = self.getNextLexem()
+
+                if self.currentLexem.getValue() != ':':
+                    self.isError = True
+                    print('Error :')
+                    return ErrorNode(self.currentLexem,'Expected ":"')
+                else:
+                    self.currentLexem = self.getNextLexem()
+                    if not self.currentLexem.getValue() in ['integer','float','char','string','array','boolean']:
+                        self.isError = True
+                        print('Unknown type')
+                        return ErrorNode(self.currentLexem,'Unknown type')
+                    else:
+                        symbolTable.update([(elem,self.currentLexem.getValue()) for elem in vars])
+                        vars.clear()
+                        self.currentLexem = self.getNextLexem()
+                        if self.currentLexem.getValue() != ';':
+                            self.isError = True
+                            print('Error ;')
+                            return ErrorNode(self.currentLexem,'Expected ";"')
+                        else:
+                            self.currentLexem = self.getNextLexem()
+        
+        if isVarSet:
+            self.symbolStack.add(symbolTable)
+
         self.isMoved = True
         blockList = self.parseStatementSeq()
+        if type(blockList) is ErrorNode:
+            return ErrorNode(blockList.gelValue(),blockList.getMessage())
         if (self.currentLexem.getValue() == 'end'):
             self.currentLexem = self.getNextLexem()
         else:
             print('needed end')
             self.isError = True
             return ErrorNode(self.currentLexem,'expected "end"')
+
+        if isVarSet:
+            self.symbolStack.remove()
+
         print('Finished PB')
         return BlockNode(blockList)
 
@@ -584,13 +842,25 @@ class Parser:
     def parseCondition(self):
         print('PC')
         left = self.parseExpr()
+        if type(left) is ErrorNode:
+            return ErrorNode(left.gelValue(),left.getMessage())
         oper = self.currentLexem
         if (oper.getValue() == '<' or oper.getValue() == '>' or
             oper.getValue() == '=' or oper.getValue() == '>=' or
             oper.getValue() == '<=' or oper.getValue() == '<>'):
 
             right = self.parseExpr()
-            left = BinOperNode(left,oper,right)
+            if type(right) is ErrorNode:
+                return ErrorNode(right.gelValue(),right.getMessage())
+            elif ((left.getType() in ['integer','float'] and right.getType() in ['integer','float']) or
+                (left.getType() in ['string','char'] and right.getType() in ['string','char'])):
+
+                return BinOperNode(left,oper,right,'boolean')
+
+            else:
+                self.isError = True
+                print('Error type on condition')
+                return ErrorNode(self.currentLexem,f'Unable to compare {right.getType()} and {left.getType()}')
 
         print('Finished PC')
         return left
@@ -599,12 +869,21 @@ class Parser:
     def parseWhile(self):
         print('PW')
         condPart = self.parseCondition()
+        if type(condPart) is ErrorNode:
+            return ErrorNode(condPart.gelValue(),condPart.getMessage())
+        elif condPart.getType() != 'boolean':
+            self.isError = True
+            print('Error condition type')
+            return ErrorNode(self.currentLexem,'Expected boolean')
+
         if self.currentLexem.getValue() != 'do':
             self.isError = True
             print('Error do')
             return ErrorNode(self.currentLexem,'Expected "do"')
+
         mainPart = self.parseStatement()
-        #self.currentLexem = self.getNextLexem()
+        if type(mainPart) is ErrorNode:
+            return ErrorNode(mainPart.gelValue(),mainPart.getMessage())
 
         print('Finished PW')
         return WhileNode(condPart,mainPart)
@@ -613,26 +892,46 @@ class Parser:
     def parseUntil(self):
         print('PU')
         mainPart = self.parseStatementSeq()
+        if type(mainPart) is ErrorNode:
+            return ErrorNode(mainPart.gelValue(),mainPart.getMessage())
+
         if self.currentLexem.getValue() != 'until':
             self.isError = True
             print('Error until')
             return ErrorNode(self.currentLexem,'Expected "until"')
-        conditionPart = self.parseCondition()
 
-        #self.currentLexem = self.getNextLexem()
+        condPart = self.parseCondition()
+        if type(condPart) is ErrorNode:
+            return ErrorNode(condPart.gelValue(),condPart.getMessage())
+        elif condPart.getType() != 'boolean':
+            self.isError = True
+            print('Error condition type')
+            return ErrorNode(self.currentLexem,'Expected boolean')
 
         print('Finished PU')
-        return UntilNode(mainPart,conditionPart)
+        return UntilNode(mainPart,condPart)
 
 
     def parseIf(self):
         print('PI')
         condPart = self.parseCondition()
+        if type(condPart) is ErrorNode:
+            return ErrorNode(condPart.gelValue(),condPart.getMessage())
+
+        elif condPart.getType() != 'boolean':
+            self.isError = True
+            print('Error condition type')
+            return ErrorNode(self.currentLexem,'Expected boolean')
+
         if self.currentLexem.getValue() != 'then':
             self.isError = True
             print('Error then')
             return ErrorNode(self.currentLexem,'Expected "then"')
+
         mainPart = self.parseStatement()
+        if type(mainPart) is ErrorNode:
+            return ErrorNode(mainPart.gelValue(),mainPart.getMessage())
+
         print('kinda else',self.currentLexem.getValue())
         if self.currentLexem.getValue() == 'else':
             elsePart = self.parseStatement()
@@ -647,39 +946,101 @@ class Parser:
 
     def parseFor(self):
         print('Pfor')
+        isTableAddaed = False
         self.currentLexem = self.getNextLexem()
+        if self.currentLexem.getValue() == 'var':
+            self.currentLexem = self.getNextLexem()
+            isVarSet = True
+        else:
+            isVarSet = False
+
         if self.currentLexem.getType() == 'Identif':
-            identifPart = IdentifNode(self.currentLexem)
+            identifPart = self.currentLexem
+            if not isVarSet:
+                self.currentLexem = self.getNextLexem()
+                typeF = self.symbolStack.find(identifPart.getValue())
+                if self.currentLexem.getValue() != ':' and typeF == '-1':
+                    self.isError = True
+                    print('Error for unknown variable')
+                    return ErrorNode(self.currentLexem,f'variable {self.currentLexem.getValue()} wasnt\'t declared')
+                elif typeF != '-1':
+                    identifPart = IdentifNode(identifPart,typeF)
+                    self.isMoved = True
+                else:
+                    self.currentLexem = self.getNextLexem()
+                    if self.currentLexem.getValue() == 'integer':
+                        self.symbolStack.add({identifPart.getValue(): 'integer'})
+                        identifPart = IdentifNode(identifPart,'integer')
+                        isTableAdded = True
+                    else:
+                        self.isError = True
+                        print('Error for uncountable')
+                        return ErrorNode(self.currentLexem,'uncountable variable')
+            else:
+                pass
         else:
             return ErrorNode(self.currentLexem,'Expected Identificator')
-        self.currentLexem = self.getNextLexem()
+
+        if not self.isMoved:
+            self.currentLexem = self.getNextLexem()
+        else:
+            self.isMoved = False
         if self.currentLexem.getValue() != ':=':
             self.isError = True
             print('Error :')
             return ErrorNode(self.currentLexem,'Expected ":="') 
+
         startPart = self.parseExpr()
+        if type(startPart) is ErrorNode:
+            return ErrorNode(startPart.gelValue(),startPart.getMessage())
+        elif startPart.getType() != 'integer':
+            self.isError = True
+            print('Error for start type')
+            return ErrorNode(self.currentLexem,'uncountable variable')
+
+        if isVarSet:
+            self.symbolStack.add({identifPart.getValue(): 'integer'})
+            identifPart = IdentifNode(identifPart,'integer')
+            isTableAdded = True
+
         coursePart = self.currentLexem
         if coursePart.getValue() != 'to' and coursePart.getValue() != 'downto':
             self.isError = True
             print('Error to')
             return ErrorNode(coursePart,'Expected "to"')
+
         endPart = self.parseExpr()
+        if type(endPart) is ErrorNode:
+            return ErrorNode(endPart.gelValue(),endPart.getMessage())
+        elif endPart.getType() != 'integer':
+            self.isError = True
+            print('Error for end type')
+            return ErrorNode(self.currentLexem,'uncountable variable')
+
         if self.currentLexem.getValue() != 'do':
             self.isError = True
             print('Error do')
             return ErrorNode(self.currentLexem,'Expected "do"')
-        mainPart = self.parseStatement()
 
-        #self.currentLexem = self.getNextLexem()
+        mainPart = self.parseStatement()
+        if type(mainPart) is ErrorNode:
+            return ErrorNode(mainPart.gelValue(),mainPart.getMessage())
 
         print('Finished Pfor')
+        self.symbolStack.remove()
         return ForNode(identifPart,startPart,coursePart,endPart,mainPart)
 
 
     def parseIdentif(self):
         print('Pid')
         if self.currentLexem.getType() == 'Identif':
-            var = IdentifNode(self.currentLexem)
+            typeV = self.symbolStack.find(self.currentLexem.getValue())
+            if typeV != '-1':
+                var = IdentifNode(self.currentLexem,typeV)
+            else:
+                self.isError = True
+                print('Error unknown variable')
+                return ErrorNode(self.currentLexem,f'variable {self.currentLexem.getValue()} wasnt\'t declared')
             self.currentLexem = self.getNextLexem()
             self.isMoved = False
         else:
@@ -687,8 +1048,9 @@ class Parser:
             print('Error id')
             return ErrorNode(self.currentLexem,'Expected Identificator')
 
-        while (self.currentLexem.getValue() == '.' or self.currentLexem.getValue() == ':=' or
-               self.currentLexem.getValue() == '[' or self.currentLexem.getValue() == '('):
+        while ((self.currentLexem.getValue() == '.' or self.currentLexem.getValue() == ':=' or
+               self.currentLexem.getValue() == '[' or self.currentLexem.getValue() == '(') and
+               not self.isError):
         
             if self.currentLexem.getValue() == '.':
                 self.currentLexem = self.getNextLexem()
@@ -699,14 +1061,37 @@ class Parser:
                 print('is assignment')
                 self.isMoved = False
                 exp = self.parseExpr()
-                return AssignNode(var,exp)
+                if type(exp) is ErrorNode:
+                    return ErrorNode(self.currentLexem,exp.getMessage())
+                elif exp.getType() == var.getType():
+                    return AssignNode(var,exp)
+                else:
+                    self.isError = True
+                    print('Error assign type')
+                    return ErrorNode(self.currentLexem,f'Unable to transform {exp.getType()} to {var.getType()}')
 
             elif self.currentLexem.getValue() == '[':
                 parsList = []
-                parsList.append(self.parseExpr())
+                exp = self.parseExpr()
+                if type(exp) is ErrorNode:
+                    return ErrorNode(self.currentLexem,exp.getMessage())
+                elif exp.getType() != 'integer':
+                    self.isError = True
+                    print('Error type arrElem')
+                    return ErrorNode(self.currentLexem,'uncountable variable')
+                else:
+                    parsList.append(exp)
                 self.isMoved = False
                 while self.currentLexem.getValue() ==',':
-                    parsList.append(self.parseExpr())
+                    exp = self.parseExpr()
+                    if type(exp) is ErrorNode:
+                        return ErrorNode(self.currentLexem,exp.getMessage())
+                    elif exp.getType() != 'integer':
+                        self.isError = True
+                        print('Error type arrElem')
+                        return ErrorNode(self.currentLexem,'uncountable variable')
+                    else:
+                        parsList.append(exp)
                     self.isMoved = False
                     
                 if self.currentLexem.getValue() == ']':
@@ -743,5 +1128,10 @@ class Parser:
         
 
     def analyze(self):
+        if not self.isSymbolTableCreated:
+            self.symbolStack = SymbolStack()
+            self.isSymbolTableCreated = True
+            return self.getVars()
+
         return self.parseStatement()
             

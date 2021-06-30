@@ -1,0 +1,8 @@
+var
+a: integer;
+b,b1: boolean;
+
+begin
+	if b or b1 then
+	a:=a mod 2;
+end.

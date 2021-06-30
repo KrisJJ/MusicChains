@@ -1,11 +1,11 @@
 ﻿for
-└-i
+└-i: integer
 └-to
   └-1
   └-5
 └-do
-  └-a
+  └-a: integer
     └-:=
-      └-+
-        └-a
-        └-i
+      └-+: integer
+        └-a: integer
+        └-i: integer

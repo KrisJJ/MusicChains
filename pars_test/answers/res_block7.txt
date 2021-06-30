@@ -1,0 +1,5 @@
+﻿b: integer
+└-:=
+  └-+: integer
+    └-1
+    └-a: integer

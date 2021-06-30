@@ -1,0 +1,15 @@
+﻿repeat
+└-a: integer
+  └-:=
+    └--: integer
+      └-a: integer
+      └-1
+└-a: integer
+  └-:=
+    └-*: integer
+      └-a: integer
+      └-2
+└-until
+  └->: boolean
+    └-a: integer
+    └-5

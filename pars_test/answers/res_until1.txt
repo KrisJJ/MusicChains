@@ -1,10 +1,10 @@
 ﻿repeat
-└-a
+└-a: integer
   └-:=
-  └--
-    └-a
-    └-1
+    └--: integer
+      └-a: integer
+      └-1
 └-until
-  └->
-    └-a
+  └->: boolean
+    └-a: integer
     └-5

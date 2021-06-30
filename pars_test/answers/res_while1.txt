@@ -1,10 +1,10 @@
 ﻿while
-└->
-  └-a
+└->: boolean
+  └-a: integer
   └-5
 └-do
-  └-a
+  └-a: integer
     └-:=
-      └--
-        └-a
+      └--: integer
+        └-a: integer
         └-1

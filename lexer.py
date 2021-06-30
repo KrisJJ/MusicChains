@@ -84,7 +84,9 @@ class Lexem:
             self.lexemValue = bufferedString
 
         elif state is State.StIdent:
-            if bufferedString in Lexer.keywords:
+            if bufferedString in ['true','false']:
+                self.lexemType = 'Boolean'
+            elif bufferedString in Lexer.keywords:
                 self.lexemType = 'Keyword'
             else:
                 self.lexemType = 'Identif'

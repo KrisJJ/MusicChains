@@ -1,0 +1,11 @@
+var
+a: integer;
+
+begin
+	repeat
+	begin
+		a:=a-1;
+		a:=a*2;
+	end;
+	until a>5;
+end.

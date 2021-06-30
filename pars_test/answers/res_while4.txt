@@ -1,0 +1,14 @@
+﻿while
+└-and: boolean
+  └->: boolean
+    └-a: integer
+    └-5
+  └-<: boolean
+    └-a: integer
+    └-9
+└-do
+  └-a: integer
+    └-:=
+      └-+: integer
+        └-a: integer
+        └-1

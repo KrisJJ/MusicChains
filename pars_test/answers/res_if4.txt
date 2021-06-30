@@ -1,0 +1,8 @@
+﻿if
+└-b: boolean
+└-then
+  └-a: integer
+    └-:=
+      └-+: integer
+        └-a: integer
+        └-1

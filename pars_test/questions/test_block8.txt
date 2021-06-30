@@ -1,0 +1,8 @@
+var
+a: integer;
+
+begin
+var a: string;
+var b: integer;
+b:=1+a;
+end.

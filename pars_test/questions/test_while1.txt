@@ -1,3 +1,6 @@
+var
+a: integer;
+
 begin
 	while a>5 do
 	a:=a-1;
