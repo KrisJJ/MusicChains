@@ -1,7 +1,10 @@
 var
 a: integer;
 
+function make(q,w,e:integer):integer;
 begin
-	if a then
-	a:=a mod 2;
+end;
+
+begin
+	a:=make(0,1,2);
 end.

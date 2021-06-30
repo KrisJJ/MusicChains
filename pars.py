@@ -359,16 +359,43 @@ class FuncParsNode(Node):
 
 class FunctionNode(Node):
     var = None
-    parsList = None
+    statement = None
+    typeF = None
 
-    def __init__(self,var,parsList):
+    def __init__(self,var,statement,typeF):
         self.var = var
-        self.parsList = parsList
+        self.statement = statement
+        self.typeF = typeF
+
 
     def draw(self,deep,fout):
         self.var.draw(deep,fout)
-        for elem in self.parsList:
+        for elem in self.statement:
             elem.draw(deep+1,fout)
+
+    def getType(self):
+        return self.typeF
+
+
+class FunctionConstructorNode(Node):
+    var = None
+    parsList = None
+    typeF = None
+
+    def __init__(self,var,parsList,typeF):
+        self.var = var
+        self.parsList = parsList
+        self.typeF = typeF
+
+    def draw(self,deep,fout):
+        if deep>0:
+            fout.write('  '*(deep-1)+ '└-' + str(self.var.getValue()) + ': function : ' + self.typeF + '\n')
+        else:
+            fout.write(str(self.var.getValue()) + ': function : ' + self.typeF + '\n')
+        self.parsList.draw(deep+1,fout)
+
+    def getType(self):
+        return self.typeF
 
 
 class ExprListNode(Node):
@@ -455,7 +482,8 @@ class Parser:
         symbolTable = {}
         if self.currentLexem.getValue() == 'var':
             self.currentLexem = self.getNextLexem()
-            while self.currentLexem.getValue() != 'begin' and self.currentLexem.getType() != 'Final':
+            while (self.currentLexem.getValue() != 'begin' and self.currentLexem.getType() != 'Final' and
+                   self.currentLexem.getValue() != 'function' and self.currentLexem.getType() != 'procedure'):
                 vars = [self.currentLexem.getValue()]
                 self.currentLexem = self.getNextLexem()
 
@@ -733,6 +761,9 @@ class Parser:
 
             elif self.currentLexem.getValue() == 'if':
                 st = self.parseIf()
+
+            elif self.currentLexem.getValue() == 'function' or self.currentLexem.getValue() == 'procedure':
+                st = self.parseFunction()
 
             elif (self.currentLexem.getValue() == 'end' or self.currentLexem.getValue() == 'until' or
                   self.currentLexem.getValue() == 'else'):
@@ -1031,6 +1062,169 @@ class Parser:
         return ForNode(identifPart,startPart,coursePart,endPart,mainPart)
 
 
+    def parseFunction(self):
+        symbolTable = {}
+        if self.currentLexem.getValue() == 'function':
+            isFunction = True
+        else:
+            isFunction = False
+
+        self.currentLexem = self.getNextLexem()
+        if self.currentLexem.getType() != 'Identif':
+            self.isError = True
+            print('Error func name')
+            return ErrorNode(self.currentLexem,'Expected function name')
+        else:
+            funcName = self.currentLexem
+
+        self.symbolStack.add({funcName.getValue(): 'void'})
+
+        self.currentLexem = self.getNextLexem()
+        if ((not isFunction and self.currentLexem.getValue() != ';') and self.currentLexem.getValue() != '('):
+            self.isError = True
+            print('Error ;')
+            return ErrorNode(self.currentLexem,'Expected ";"')
+            
+        if self.currentLexem.getValue() == '(':
+            vars = []
+            self.currentLexem = self.getNextLexem()
+            while self.currentLexem.getValue() != ')' and self.currentLexem.getType() != 'Final':
+                if self.currentLexem.getValue() == 'var':
+                    self.currentLexem = self.getNextLexem()
+
+                if self.currentLexem.getType() != 'Identif':
+                    self.isError = True
+                    print('Error func var')
+                    return ErrorNode(self.currentLexem,'Expected Identificator')
+                else:
+                    vars.append(self.currentLexem.getValue())
+                    self.currentLexem = self.getNextLexem()
+                    while self.currentLexem.getValue() == ',':
+                        self.currentLexem = self.getNextLexem()
+                        if self.currentLexem.getType() != 'Identif':
+                            self.isError = True
+                            print('Error func var')
+                            return ErrorNode(self.currentLexem,'Expected Identificator')
+                        else:
+                            vars.append(self.currentLexem.getValue())
+                            self.currentLexem = self.getNextLexem()
+
+                    if self.currentLexem.getValue() != ':':
+                        self.isError = True
+                        print('Error :')
+                        return ErrorNode(self.currentLexem,'Expected ":"')
+                    else:
+                        self.currentLexem = self.getNextLexem()
+                        if not self.currentLexem.getValue() in ['integer','float','char','string','array','boolean']:
+                            self.isError = True
+                            print('Unknown type')
+                            return ErrorNode(self.currentLexem,'Unknown type')
+                        else:
+                            symbolTable.update([(elem,self.currentLexem.getValue()) for elem in vars])
+                            vars.clear()
+                            self.currentLexem = self.getNextLexem()
+                            if self.currentLexem.getValue() != ';' and self.currentLexem.getValue() != ')':
+                                self.isError = True
+                                print('Error )')
+                                return ErrorNode(self.currentLexem,'Expected ")"')
+                            elif self.currentLexem.getValue() == ';':
+                                self.currentLexem = self.getNextLexem()
+
+            if self.currentLexem.getValue() != ')':
+                self.isError = True
+                print('Error )')
+                return ErrorNode(self.currentLexem,'Expected ")"')
+            else:
+                self.currentLexem = self.getNextLexem()
+
+        if self.currentLexem.getValue() == ':':
+            if not isFunction:
+                self.isError = True
+                print('Error :')
+                return ErrorNode(self.currentLexem,'Unexpected type for procedure')
+            else:
+                self.currentLexem = self.getNextLexem()
+                if not self.currentLexem.getValue() in ['integer','float','char','string','array','boolean']:
+                    self.isError = True
+                    print('Unknown type')
+                    return ErrorNode(self.currentLexem,'Unknown type')
+                else:
+                    self.symbolStack.remove()
+                    self.symbolStack.add({funcName.getValue(): self.currentLexem.getValue()})
+                    symbolTable.update({funcName.getValue(): self.currentLexem.getValue()})
+                    self.currentLexem = self.getNextLexem()
+        else:
+            if isFunction:
+                self.isError = True
+                print('Error :')
+                return ErrorNode(self.currentLexem,'Expected ":"')
+
+        if self.currentLexem.getValue() != ';':
+            self.isError = True
+            print('Error ;')
+            return ErrorNode(self.currentLexem,'Expected ";"')
+        else:
+            self.currentLexem = self.getNextLexem()
+
+        isVarSet = False
+        while self.currentLexem.getValue() == 'var':
+            isVarSet = True
+            self.currentLexem = self.getNextLexem()
+            if self.currentLexem.getType() != 'Identif':
+                self.isError = True
+                print('Error id')
+                return ErrorNode(self.currentLexem,'Expected Identifier')
+            else:
+                vars = [self.currentLexem.getValue()]
+                self.currentLexem = self.getNextLexem()
+                while self.currentLexem.getValue() == ',':
+                    self.currentLexem = self.getNextLexem()
+                    if self.currentLexem.getType() != 'Identif':
+                        self.isError = True
+                        print('Error id')
+                        return ErrorNode(self.currentLexem,'Expected Identifier')
+                    else:
+                        vars.append(self.currentLexem.getValue())
+                    self.currentLexem = self.getNextLexem()
+
+                if self.currentLexem.getValue() != ':':
+                    self.isError = True
+                    print('Error :')
+                    return ErrorNode(self.currentLexem,'Expected ":"')
+                else:
+                    self.currentLexem = self.getNextLexem()
+                    if not self.currentLexem.getValue() in ['integer','float','char','string','array','boolean']:
+                        self.isError = True
+                        print('Unknown type')
+                        return ErrorNode(self.currentLexem,'Unknown type')
+                    else:
+                        for elem in vars:
+                            if elem in symbolTable.keys():
+                                self.isError = True
+                                print('var already exists')
+                                return ErrorNode(self.currentLexem,'variable already exists')
+                            else:
+                                symbolTable.update({elem: self.currentLexem.getValue()})
+                        vars.clear()
+                        self.currentLexem = self.getNextLexem()
+                        if self.currentLexem.getValue() != ';':
+                            self.isError = True
+                            print('Error ;')
+                            return ErrorNode(self.currentLexem,'Expected ";"')
+                        else:
+                            self.currentLexem = self.getNextLexem()
+
+        
+        self.symbolStack.add(symbolTable)
+        self.isMoved = True
+        st = self.parseStatement()
+        self.symbolStack.remove()
+        if type(st) is ErrorNode:
+            return ErrorNode(st.gelValue(),st.getMessage())
+        else:
+            return FunctionConstructorNode(funcName,st,symbolTable[funcName.getValue()])
+
+
     def parseIdentif(self):
         print('Pid')
         if self.currentLexem.getType() == 'Identif':
@@ -1114,7 +1308,8 @@ class Parser:
                 if self.currentLexem.getValue() == ')':
                     self.currentLexem = self.getNextLexem()
                     self.isMoved = True
-                    var = FunctionNode(var,parsList)
+                    typeF = self.symbolStack.find(var)
+                    var = FunctionNode(var,parsList,typeV)
                 else:
                     print('Current',self.currentLexem.getValue())
                     self.isError = True

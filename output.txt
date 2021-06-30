@@ -1,15 +1,7 @@
-while
-└-<: boolean
-  └-a: integer
-  └-5
-└-do
-  └-a: integer
-    └-:=
-      └-+: integer
-        └-a: integer
-        └-1
-  └-a: integer
-    └-:=
-      └-*: integer
-        └-a: integer
-        └-2
+make: function : integer
+a: integer
+└-:=
+  └-make: integer
+    └-0
+    └-1
+    └-2
